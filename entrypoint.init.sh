@@ -1,24 +1,25 @@
-
+#!/bin/bash
+set -e
 
 if [ "$SERVER_NAME" == "" ]; then
-    echo "Shit, you forgot to set the env var 'SERVER_NAME'"
+    echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
     exit -69
 fi
 if [ "$SSL_PUBLIC_PATH" == "" ]; then
-    echo "Shit, you forgot to set the env var 'SSL_PUBLIC_PATH'"
+    echo "Sh*t, you forgot to set the env var 'SSL_PUBLIC_PATH'"
     exit -68
 fi
 if [ "$SSL_PRIVATE_PATH" == "" ]; then
-    echo "Shit, you forgot to set the env var 'SSL_PRIVATE_PATH'"
+    echo "Sh*t, you forgot to set the env var 'SSL_PRIVATE_PATH'"
     exit -67
 fi
 if [ "$UPSTREAM_TARGET" == "" ]; then
-    echo "Shit, you forgot to set the env var 'UPSTREAM_TARGET'"
+    echo "Sh*t, you forgot to set the env var 'UPSTREAM_TARGET'"
     exit -66
 fi
 
 
-cat << EOF > /etc/nginx/nginx.conf
+cat << EOF > /tmp/nginx.conf
 worker_processes auto;
 
 events { worker_connections 4096; }
@@ -36,6 +37,29 @@ http {
                         '"$http_user_agent" "$http_x_forwarded_for"';
 
     access_log  /var/log/nginx/access.log  main;
+
+EOF
+
+
+
+
+
+# Check if we need to add auth stuff (for docker registry now)
+if [ "$HTPASSWD_PATH" != "" ]; then
+        cat << EOF >> /tmp/nginx.conf
+        auth_basic "$SERVER_NAME";
+        auth_basic_user_file  "$HTPASSWD_PATH";
+        add_header 'Docker-Distribution-Api-Version' 'registry/2.0' always;
+EOF
+fi
+
+
+
+
+
+
+
+cat << EOF >> /tmp/nginx.conf
 
     gzip  							on;
     gzip_comp_level   	2;
@@ -75,7 +99,11 @@ http {
         server_name <server>;
         return 301 https://\$server_name\$request_uri;
     }
-
 }
 EOF
 
+cat /tmp/nginx.conf
+
+cp /tmp/nginx.conf /etc/nginx/
+
+./entrypoint.sh

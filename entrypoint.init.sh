@@ -45,10 +45,10 @@ EOF
 
 
 # Check if we need to add auth stuff (for docker registry now)
-if [ "$HTPASSWD_PATH" != "" ]; then
+if [ "$PASSWD_PATH" != "" ]; then
         cat << EOF >> /tmp/nginx.conf
         auth_basic "$SERVER_NAME";
-        auth_basic_user_file  "$HTPASSWD_PATH";
+        auth_basic_user_file  "$PASSWD_PATH";
         add_header 'Docker-Distribution-Api-Version' 'registry/2.0' always;
 EOF
 fi

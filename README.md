@@ -5,7 +5,9 @@ An Nginx & Docker-based HTTPS/SSL reverse proxy -- loosely coupled docker servic
 > Required:
 >
 > 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
-> 1. Define Passwords using `htpasswd`, we'll 'mount' the file later.
+> 1. Choose auth method:
+>     * Simple: define HTTP_USERNAME & HTTP_PASSWORD (recommended)
+>     * Htpasswd: Mount an existing passwd file.
 
 
 ### Docker CLI example:

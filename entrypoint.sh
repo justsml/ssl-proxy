@@ -2,6 +2,8 @@
 set -e
 set -x
 
+printf "\n\n ********** STARTING NGINX HTTPS/AUTH PROXY ********** \n\n\n"
+
 if [ "$SERVER_NAME" == "" ]; then
     echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
     exit -69
@@ -31,14 +33,14 @@ worker_processes auto;
 
 events { worker_connections 4096; }
 
-upstream upstream {
-    server $UPSTREAM_TARGET;
-}
-
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
 
 http {
+
+    upstream upstream {
+        server $UPSTREAM_TARGET;
+    }
 
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;

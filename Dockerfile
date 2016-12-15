@@ -8,7 +8,8 @@ COPY ./entrypoint.sh ./
 
 EXPOSE 80 443
 
-RUN apt-get update && apt-get install apache2-utils -y
+# RUN apt-get update && apt-get install apache2-utils openssl -y
+RUN apk update && apk add bash && apk add apache2-utils && apk add openssl
 
-ENTRYPOINT [ '/www/entrypoint.sh' ]
+ENTRYPOINT /www/entrypoint.sh
 

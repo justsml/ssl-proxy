@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 if [ "$SERVER_NAME" == "" ]; then
     echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
@@ -18,29 +19,36 @@ if [ "$UPSTREAM_TARGET" == "" ]; then
     exit -66
 fi
 
+if [ "$HTTP_USERNAME" != "" ]; then
+    printf "\n\nCreating Password File for user $HTTP_USERNAME\n\n"
+    htpasswd -BbC 15 -c /tmp/.htpasswd $HTTP_USERNAME $HTTP_PASSWORD
+    cp /tmp/.htpasswd /etc/nginx/
+    export PASSWD_PATH=/etc/nginx/.htpasswd
+fi
 
 cat << EOF > /tmp/nginx.conf
 worker_processes auto;
 
 events { worker_connections 4096; }
 
-upstream rancher {
+upstream upstream {
     server $UPSTREAM_TARGET;
 }
+
+error_log  /var/log/nginx/error.log warn;
+pid        /var/run/nginx.pid;
 
 http {
 
     include       /etc/nginx/mime.types;
     default_type  application/octet-stream;
-    log_format  main  '$remote_addr $remote_user [$time_local] "$request" '
-                        '$status $body_bytes_sent "$http_referer" '
-                        '"$http_user_agent" "$http_x_forwarded_for"';
+    log_format  main  '\$remote_addr \$remote_user [\$time_local] "\$request" '
+                        '\$status \$body_bytes_sent "\$http_referer" '
+                        '"\$http_user_agent" "\$http_x_forwarded_for"';
 
     access_log  /var/log/nginx/access.log  main;
 
 EOF
-
-
 
 
 
@@ -56,12 +64,9 @@ fi
 
 
 
-
-
-
 cat << EOF >> /tmp/nginx.conf
 
-    gzip  							on;
+    gzip                on;
     gzip_comp_level   	2;
     gzip_min_length  		4096;
     gzip_proxied     		expired no-cache no-store private auth;
@@ -83,7 +88,7 @@ cat << EOF >> /tmp/nginx.conf
             proxy_set_header X-Forwarded-Proto \$scheme;
             proxy_set_header X-Forwarded-Port \$server_port;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_pass http://rancher;
+            proxy_pass http://upstream;
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection "Upgrade";
@@ -96,9 +101,11 @@ cat << EOF >> /tmp/nginx.conf
 
     server {
         listen 80;
-        server_name <server>;
+        server_name $SERVER_NAME;
         return 301 https://\$server_name\$request_uri;
     }
+
+    include /etc/nginx/conf.d/*.conf;
 }
 EOF
 
@@ -106,4 +113,4 @@ cat /tmp/nginx.conf
 
 cp /tmp/nginx.conf /etc/nginx/
 
-./entrypoint.sh
+nginx -g "daemon off;"

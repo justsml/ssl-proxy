@@ -27,7 +27,8 @@ docker run -d --restart=unless-stopped \
 docker run -d --restart=unless-stopped \
   --name docker-registry-ssl-proxy \
   -p 5000:443 \
-  -e 'PASSWD_PATH=/registry/.passwd' \
+  -e 'HTTP_USERNAME=devops' \
+  -e 'HTTP_PASSWORD=secure?' \
   -e 'SERVER_NAME=hub.elph.io' \
   -e 'UPSTREAM_TARGET=docker-registry:4999' \
   -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \

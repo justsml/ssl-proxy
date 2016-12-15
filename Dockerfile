@@ -2,8 +2,13 @@ FROM nginx:1-alpine
 
 MAINTAINER Dan Levy <Dan@DanLevy.net>
 
-COPY ./entrypoint.init.sh ./
+WORKDIR /www/
+
+COPY ./entrypoint.sh ./
 
 EXPOSE 80 443
 
-ENTRYPOINT [ './entrypoint.init.sh' ]
+RUN apt-get update && apt-get install apache2-utils -y
+
+ENTRYPOINT [ '/www/entrypoint.sh' ]
+

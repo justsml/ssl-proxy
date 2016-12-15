@@ -3,8 +3,9 @@
 An Nginx & Docker-based HTTPS/SSL reverse proxy -- loosely coupled docker service.
 
 > Required:
-1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
-2. Define Passwords using `htpasswd`, we'll 'mount' the file later.
+>
+> 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
+> 1. Define Passwords using `htpasswd`, we'll 'mount' the file later.
 
 
 ### Docker CLI example:
@@ -28,7 +29,7 @@ docker run -d --restart=unless-stopped \
   --name docker-registry-ssl-proxy \
   -p 5000:443 \
   -e 'HTTP_USERNAME=devops' \
-  -e 'HTTP_PASSWORD=secure?' \
+  -e 'HTTP_PASSWORD=secure' \
   -e 'SERVER_NAME=hub.elph.io' \
   -e 'UPSTREAM_TARGET=docker-registry:4999' \
   -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \

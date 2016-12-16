@@ -31,7 +31,7 @@ fi
 cat << EOF > /tmp/nginx.conf
 worker_processes auto;
 
-events { worker_connections 4096; }
+events { worker_connections 1024; }
 
 error_log  /var/log/nginx/error.log warn;
 pid        /var/run/nginx.pid;
@@ -68,11 +68,11 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-    gzip                on;
-    gzip_comp_level   	2;
-    gzip_min_length  		4096;
-    gzip_proxied     		expired no-cache no-store private auth;
-    gzip_types       		application/x-javascript application/javascript text/javascript text/plain text/xml text/css application/xml;
+    # gzip                off;
+    # gzip_comp_level   	2;
+    # gzip_min_length  		4096;
+    # gzip_proxied     		expired no-cache no-store private auth;
+    # gzip_types       		application/x-javascript application/javascript text/javascript text/plain text/xml text/css application/xml;
 
     #tcp_nopush     		on;
     sendfile        		on;
@@ -84,8 +84,20 @@ cat << EOF >> /tmp/nginx.conf
         server_name           $SERVER_NAME;
         ssl_certificate       $SSL_PUBLIC_PATH;
         ssl_certificate_key   $SSL_PRIVATE_PATH;
+        ssl_session_timeout 1d;
+        ssl_session_tickets on;
+        ssl_session_cache shared:SSL:72m;
+        ssl_prefer_server_ciphers on;
+        # intermediate configuration. tweak to your needs.
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:CAMELLIA:DES-CBC3-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA';
+
+        # # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
+        # ssl_dhparam /etc/pki/nginx/dh2048.pem;
+
 
         location / {
+            add_header Strict-Transport-Security max-age=15768000;
             proxy_set_header Host \$host;
             proxy_set_header X-Forwarded-Proto \$scheme;
             proxy_set_header X-Forwarded-Port \$server_port;
@@ -94,6 +106,7 @@ cat << EOF >> /tmp/nginx.conf
             proxy_http_version 1.1;
             proxy_set_header Upgrade \$http_upgrade;
             proxy_set_header Connection "Upgrade";
+            proxy_buffering off;
             # This allows the ability for the execute shell window to
             # remain open for up to 30 minutes. Without this parameter,
             # the default is 1 minute and will automatically close.
@@ -102,6 +115,7 @@ cat << EOF >> /tmp/nginx.conf
     }
 
     server {
+        add_header Strict-Transport-Security max-age=15768000;
         listen 80;
         server_name $SERVER_NAME;
         return 301 https://\$server_name\$request_uri;

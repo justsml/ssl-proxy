@@ -1,4 +1,5 @@
-FROM nginx:1-alpine
+# FROM openresty/openresty:1.11.2.2-alpine
+FROM nginx:1.11-alpine
 
 MAINTAINER Dan Levy <Dan@DanLevy.net>
 

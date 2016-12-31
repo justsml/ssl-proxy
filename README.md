@@ -1,4 +1,4 @@
-# docker-ssl-proxy
+# Simple docker & nginx-based ssl-proxy
 
 An Nginx & Docker-based HTTPS/SSL reverse proxy -- loosely coupled docker service.
 
@@ -46,14 +46,15 @@ docker run -d --restart=unless-stopped \
 ### Example For A Rancher Server
 
 ```sh
+# Start Rancher w/ local port binding at 172.17.0.1:8080
 docker run -d --restart=unless-stopped \
   --name rancher-server \
   -p '172.17.0.1:8080:8080' \
   -v /data/rancher/mysql:/var/lib/mysql \
-  rancher/server:v1.2.2
+  rancher/server:latest
 
 
-# Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
+# Create an ssl-proxy (w/o user/pass auth) to point at the local server's port 8080.
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
   -p 8080:8080 \
@@ -63,7 +64,7 @@ docker run -d --restart=unless-stopped \
   -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
   -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
   -v '/certs:/certs:ro' \
-  --link 'docker-registry:docker-registry' \
+  --link 'rancher-server:rancher-server' \
   justsml/ssl-proxy:latest
 
 ```
@@ -89,6 +90,14 @@ services:
       - 'rancher-server:rancher-server'
 
 ```
+
+
+
+
+
+
+
+
 
 
 

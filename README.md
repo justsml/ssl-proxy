@@ -12,7 +12,7 @@ An Nginx & Docker-based HTTPS/SSL reverse proxy -- loosely coupled docker servic
 
 ### Docker CLI example:
 
-For example, to protect a docker registry:
+For example, to protect an HTTP service:
 
 1. Requires any working HTTP service (for UPSTREAM_TARGET.) (Supports **local, in-docker, even remote**).
 1. Start an instance of `justsml/ssl-proxy:latest` as shown below.
@@ -37,6 +37,31 @@ docker run -d --restart=unless-stopped \
   -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
   -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
   -e "ADD_HEADER='Docker-Distribution-Api-Version' 'registry/2.0' always" \
+  -v '/certs:/certs:ro' \
+  --link 'docker-registry:docker-registry' \
+  justsml/ssl-proxy:latest
+
+```
+
+### Example For A Rancher Server
+
+```sh
+docker run -d --restart=unless-stopped \
+  --name rancher-server \
+  -p '172.17.0.1:8080:8080' \
+  -v /data/rancher/mysql:/var/lib/mysql \
+  rancher/server:v1.2.2
+
+
+# Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
+docker run -d --restart=unless-stopped \
+  --name ssl-proxy \
+  -p 8080:8080 \
+  -e 'HTTPS_PORT=8080' \
+  -e 'SERVER_NAME=rancher.example.com' \
+  -e 'UPSTREAM_TARGET=172.17.0.1:8080' \
+  -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
   -v '/certs:/certs:ro' \
   --link 'docker-registry:docker-registry' \
   justsml/ssl-proxy:latest

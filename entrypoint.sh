@@ -158,6 +158,7 @@ http {
     server_name           $SERVER_NAME;
     ssl_certificate       $SSL_PUBLIC_PATH;
     ssl_certificate_key   $SSL_PRIVATE_PATH;
+    ssl_buffer_size 4k;
     ssl_session_timeout 4h;
     ssl_session_tickets on;
     ssl_session_cache shared:SSL:72m;

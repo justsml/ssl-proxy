@@ -145,8 +145,8 @@ http {
 
 
   server {
-		listen    443       ssl;
-		listen    [::]:443  ssl;
+    listen    443       ssl;
+    listen    [::]:443  ssl;
 
     # add_header  Alternate-Protocol "443:npn-spdy/3.1";
 
@@ -157,7 +157,7 @@ http {
     server_name           $SERVER_NAME;
     ssl_certificate       $SSL_PUBLIC_PATH;
     ssl_certificate_key   $SSL_PRIVATE_PATH;
-    ssl_session_timeout 1d;
+    ssl_session_timeout 4h;
     ssl_session_tickets on;
     ssl_session_cache shared:SSL:72m;
     ssl_prefer_server_ciphers on;
@@ -198,6 +198,17 @@ http {
 
     location / {
 
+      if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' \$http_origin;
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain charset=UTF-8';
+        add_header 'Content-Length' 0;
+        return 204;
+      }
+
 EOF
 
 # Check if we need to add auth stuff (for docker registry now)
@@ -222,23 +233,25 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header X-Real-IP  \$remote_addr;
       proxy_set_header X-Forwarded-Port \$server_port;
       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      proxy_pass http://upstream;
       proxy_http_version 1.1;
       proxy_set_header Upgrade \$http_upgrade;
       proxy_set_header Connection "Upgrade";
 
-# proxy_buffering off;
-proxy_buffering on;
-proxy_buffer_size 2k;
-proxy_buffers 16 4k;
-proxy_busy_buffers_size 8k;
-proxy_max_temp_file_size 2m; # remove?
-proxy_temp_file_write_size 64k;
+      proxy_buffering off;
+      proxy_buffer_size 4k;
+
+      # proxy_buffering on;
+      # proxy_buffer_size 2k;
+      # proxy_buffers 16 4k;
+      # proxy_busy_buffers_size 8k;
+      # proxy_max_temp_file_size 2m; # remove?
+      # proxy_temp_file_write_size 64k;
 
       proxy_intercept_errors off;
       # This allows the ability for the execute long connections (e.g. a web-based shell window)
       # Without this parameter, the default is 1 minute and will automatically close.
       proxy_read_timeout 900s;
-      proxy_pass http://upstream;
     }
 
     # For docker registry support, will support injecting this stuff...

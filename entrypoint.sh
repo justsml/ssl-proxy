@@ -188,6 +188,13 @@ http {
     # spdy_recv_timeout    2s; # timeout if nginx is currently expecting data from the client but nothing arrives
 
     # expires     5m;
+    
+    error_page 405 =200 @405;
+    location @405 {
+      proxy_set_header Host \$host;
+      proxy_set_header X-Forwarded-For \$scheme;
+      proxy_pass http://upstream;
+    }
 
     location / {
 
@@ -208,24 +215,6 @@ EOF
 fi
 
 cat << EOF >> /tmp/nginx.conf
-
-      error_page 405 =200 @405;
-      location @405 {
-        proxy_set_header Host \$host;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header X-Real-IP  \$remote_addr;
-        proxy_set_header X-Forwarded-Port \$server_port;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection "Upgrade";
-        proxy_buffering off;
-        proxy_intercept_errors off;
-        # This allows the ability for the execute long connections (e.g. a web-based shell window)
-        # Without this parameter, the default is 1 minute and will automatically close.
-        proxy_read_timeout 900s;
-        proxy_pass http://upstream;
-      }
 
       # add_header Strict-Trans port-Security max-age=15768000;
       proxy_set_header Host \$host;

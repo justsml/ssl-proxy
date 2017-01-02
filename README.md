@@ -57,7 +57,7 @@ docker run -d --restart=unless-stopped \
 # Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
-  -p 8080:8080 \
+  -p 8080:443 \
   -e 'HTTPS_PORT=8080' \
   -e 'SERVER_NAME=rancher.example.com' \
   -e 'UPSTREAM_TARGET=rancher-server:8080' \
@@ -88,7 +88,7 @@ services:
     - /certs:/certs
     links:
     - 'rancher-server:rancher-server'
-    ports: [ '8080:8080' ]
+    ports: [ '8080:443' ]
   rancher-server:
     image: rancher/server:latest  
     expose: [ '8080' ]

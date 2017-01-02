@@ -18,7 +18,6 @@ For example, to protect an HTTP service:
 1. Start an instance of `justsml/ssl-proxy:latest` as shown below.
 
 ```sh
-
 # Create docker registry - use it's internal exposed port 5000
 docker run -d --restart=unless-stopped \
   --name docker-registry \
@@ -46,21 +45,22 @@ docker run -d --restart=unless-stopped \
 ### Example For A Rancher Server
 
 ```sh
-# Start Rancher w/ local port binding at 172.17.0.1:8080
+
+## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
+# Start Rancher w/ local port binding at 8080
 docker run -d --restart=unless-stopped \
   --name rancher-server \
-  -p '172.17.0.1:8080:8080' \
+  -p 8080 \
   -v /data/rancher/mysql:/var/lib/mysql \
   rancher/server:latest
 
-
-# Create an ssl-proxy (w/o user/pass auth) to point at the local server's port 8080.
+# Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
   -p 8080:8080 \
   -e 'HTTPS_PORT=8080' \
   -e 'SERVER_NAME=rancher.example.com' \
-  -e 'UPSTREAM_TARGET=172.17.0.1:8080' \
+  -e 'UPSTREAM_TARGET=rancher-server:8080' \
   -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
   -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
   -v '/certs:/certs:ro' \
@@ -77,24 +77,32 @@ docker run -d --restart=unless-stopped \
 version: '2'
 services:
   ssl-proxy:
-    image: justsml/ssl-proxy
+    image: justsml/ssl-proxy:latest
     environment:
-      - SERVER_NAME=rancher.example.com
-      - UPSTREAM_TARGET=rancher-server:8080
-      - SSL_PUBLIC_PATH=/certs/fullchain.pem
-      - SSL_PRIVATE_PATH=/certs/privkey.pem
+    - HTTPS_PORT=8080
+    - SERVER_NAME=rancher.example.com
+    - UPSTREAM_TARGET=rancher-server:8080
+    - SSL_PUBLIC_PATH=/certs/fullchain.pem
+    - SSL_PRIVATE_PATH=/certs/privkey.pem
     volumes:
-      - /etc/letsencrypt/live/rancher.example.com:/certs
-      - /data/registry:/registry
-    external_links:
-      - 'rancher-server:rancher-server'
-
+    - /certs:/certs
+    links:
+    - 'rancher-server:rancher-server'
+    ports: [ '8080:8080' ]
+  rancher-server:
+    image: rancher/server:latest  
+    expose: [ '8080' ]
+    volumes: 
+    - /data/rancher/mysql:/var/lib/mysql
 ```
 
 
 
 
-
+===================
+-------------------
+===================
+-------------------
 
 
 

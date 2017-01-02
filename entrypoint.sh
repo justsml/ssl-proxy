@@ -145,7 +145,8 @@ http {
 
 
   server {
-    listen 443 ssl;
+		listen    443       ssl;
+		listen    [::]:443  ssl;
 
     # add_header  Alternate-Protocol "443:npn-spdy/3.1";
 
@@ -208,6 +209,23 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
+      error_page 405 =200 @405;
+      location @405 {
+        proxy_set_header Host \$host;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header X-Real-IP  \$remote_addr;
+        proxy_set_header X-Forwarded-Port \$server_port;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_buffering off;
+        proxy_intercept_errors off;
+        # This allows the ability for the execute long connections (e.g. a web-based shell window)
+        # Without this parameter, the default is 1 minute and will automatically close.
+        proxy_read_timeout 900s;
+        proxy_pass http://upstream;
+      }
 
       # add_header Strict-Trans port-Security max-age=15768000;
       proxy_set_header Host \$host;
@@ -215,15 +233,23 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header X-Real-IP  \$remote_addr;
       proxy_set_header X-Forwarded-Port \$server_port;
       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-      proxy_pass http://upstream;
       proxy_http_version 1.1;
       proxy_set_header Upgrade \$http_upgrade;
       proxy_set_header Connection "Upgrade";
-      proxy_buffering off;
+
+# proxy_buffering off;
+proxy_buffering on;
+proxy_buffer_size 2k;
+proxy_buffers 16 4k;
+proxy_busy_buffers_size 8k;
+proxy_max_temp_file_size 2m; # remove?
+proxy_temp_file_write_size 64k;
+
       proxy_intercept_errors off;
       # This allows the ability for the execute long connections (e.g. a web-based shell window)
       # Without this parameter, the default is 1 minute and will automatically close.
       proxy_read_timeout 900s;
+      proxy_pass http://upstream;
     }
 
     # For docker registry support, will support injecting this stuff...
@@ -240,7 +266,8 @@ cat << EOF >> /tmp/nginx.conf
 
   server {
     # add_header Strict-Transport-Security;
-    listen 80;
+		listen    80;
+		listen    [::]:80;
     server_name $SERVER_NAME;
     return 301 https://\$server_name:\$server_port\$request_uri;
   }

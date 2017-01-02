@@ -130,9 +130,7 @@ http {
   # tcp_nodelay         on; # Nagle buffering algorithm, used for keepalive only
   # tcp_nopush          off;
 
-  spdy_headers_comp   		1; # SPDY gzip header compression to at least one(1) (default 0)
-  spdy_max_concurrent_streams 	256; #SPDY maximum parallel client requests (default 100)
-
+  #See: ngx_http_v2_module
   # gzip        off;
   # gzip_comp_level     2;
   # gzip_min_length      4096;
@@ -145,8 +143,11 @@ http {
 
 
   server {
-    listen    443       default;
-    listen    [::]:443  default ipv6only=on;
+    listen    443       ssl http2;
+    listen    [::]:443  ssl http2;
+
+#     listen    443       ssl;
+#     listen    [::]:443  ssl ipv6only=on;
 
     # add_header  Alternate-Protocol "443:npn-spdy/3.1";
 
@@ -198,7 +199,7 @@ http {
 
     location / {
 
-      if ($request_method = 'OPTIONS') {
+      if (\$request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' \$http_origin;
         add_header 'Access-Control-Allow-Credentials' 'true';
         add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -273,8 +274,6 @@ cat << EOF >> /tmp/nginx.conf
     server_name $SERVER_NAME;
     return 301 https://\$server_name:\$server_port\$request_uri;
   }
-
-
 
   include /etc/nginx/conf.d/*.conf;
 }

@@ -193,7 +193,7 @@ http {
 EOF
 
 # Check if we need to add auth stuff (for docker registry now)
-if [ "$PASSWD_PATH" != "" ]; then
+if [ -f "$PASSWD_PATH" ]; then
   cat << EOF >> /tmp/nginx.conf
       auth_basic "Restricted";
       auth_basic_user_file  "$PASSWD_PATH";
@@ -226,6 +226,8 @@ cat << EOF >> /tmp/nginx.conf
       proxy_read_timeout 900s;
     }
 
+    # For docker registry support, will support injecting this stuff...
+    # TODO: Support injecting or bind mounting this config:
     location /_ping {
       auth_basic off;
     }

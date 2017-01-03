@@ -143,13 +143,13 @@ http {
 
 
   server {
-    listen    443       ssl http2;
-    listen    [::]:443  ssl http2;
+    listen    $HTTPS_PORT       ssl http2;
+    listen    [::]:$HTTPS_PORT  ssl http2;
 
-#     listen    443       ssl;
-#     listen    [::]:443  ssl ipv6only=on;
+#     listen    $HTTPS_PORT       ssl;
+#     listen    [::]:$HTTPS_PORT  ssl ipv6only=on;
 
-    # add_header  Alternate-Protocol "443:npn-spdy/3.1";
+    # add_header  Alternate-Protocol "$HTTPS_PORT:npn-spdy/3.1";
 
     # limit_req   zone=gulag burst=500 nodelay;
 
@@ -209,12 +209,13 @@ http {
         add_header 'Content-Type' 'text/plain charset=UTF-8';
         add_header 'Content-Length' 0;
         return 204;
-      } else {
-        add_header 'Access-Control-Allow-Origin' \$http_origin;
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
       }
+
+      add_header 'Access-Control-Allow-Origin' \$http_origin;
+      add_header 'Access-Control-Allow-Credentials' 'true';
+      add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
+      add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
+
 
 EOF
 

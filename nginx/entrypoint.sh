@@ -190,25 +190,30 @@ http {
     # spdy_recv_timeout    2s; # timeout if nginx is currently expecting data from the client but nothing arrives
 
     # expires     5m;
-    
-    error_page 405 =200 @405;
-    location @405 {
-      proxy_set_header Host \$host;
-      proxy_set_header X-Forwarded-For \$scheme;
-      proxy_pass http://upstream;
-    }
+
+    # error_page 405 =200 @405;
+    # location @405 {
+    #   proxy_set_header Host \$host;
+    #   proxy_set_header X-Forwarded-For \$scheme;
+    #   proxy_pass http://upstream;
+    # }
 
     location / {
 
       if (\$request_method = 'OPTIONS') {
         add_header 'Access-Control-Allow-Origin' \$http_origin;
         add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
         add_header 'Access-Control-Max-Age' 1728000;
         add_header 'Content-Type' 'text/plain charset=UTF-8';
         add_header 'Content-Length' 0;
         return 204;
+      } else {
+        add_header 'Access-Control-Allow-Origin' \$http_origin;
+        add_header 'Access-Control-Allow-Credentials' 'true';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
+        add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
       }
 
 EOF

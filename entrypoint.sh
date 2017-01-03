@@ -1,1 +1,1 @@
-haproxy/entrypoint.sh
+nginx/entrypoint.sh

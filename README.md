@@ -27,7 +27,7 @@ docker run -d --restart=unless-stopped \
 # Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
-  -p 5000:443 \
+  -p 5000:5000 \
   -e 'HTTPS_PORT=5000' \
   -e 'HTTP_USERNAME=devops' \
   -e 'HTTP_PASSWORD=secure' \
@@ -57,7 +57,7 @@ docker run -d --restart=unless-stopped \
 # Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
-  -p 8080:443 \
+  -p 8080:8080 \
   -e 'HTTPS_PORT=8080' \
   -e 'SERVER_NAME=rancher.example.com' \
   -e 'UPSTREAM_TARGET=rancher-server:8080' \
@@ -88,11 +88,11 @@ services:
     - /certs:/certs
     links:
     - 'rancher-server:rancher-server'
-    ports: [ '8080:443' ]
+    ports: [ '8080:8080' ]
   rancher-server:
-    image: rancher/server:latest  
+    image: rancher/server:latest
     expose: [ '8080' ]
-    volumes: 
+    volumes:
     - /data/rancher/mysql:/var/lib/mysql
 ```
 
@@ -128,8 +128,8 @@ docker build -t ssl-proxy:latest .
 docker rm -f TEST-ssl-proxy
 docker run --rm \
   --name TEST-ssl-proxy \
-  -v ~/certs:/certs \
-  -p 5000:443 \
+  -v ~/certs/xray:/certs \
+  -p 5000:5000 \
   -e 'HTTPS_PORT=5000' \
   -e 'HTTP_USERNAME=devops' \
   -e 'HTTP_PASSWORD=secure' \

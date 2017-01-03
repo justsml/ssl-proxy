@@ -8,7 +8,7 @@ COPY ./entrypoint.sh ./
 
 EXPOSE 80 443
 
-RUN apk --update add bash apache2-utils
+RUN apk --update add bash apache2-utils sudo
 
 ENTRYPOINT /www/entrypoint.sh
 

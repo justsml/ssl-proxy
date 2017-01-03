@@ -25,9 +25,9 @@ if [ "$HTTPS_PORT" == "" ]; then
   exit -69
 fi
 
-sudo mkdir -p /etc/haproxy/certs
-sudo cat $SSL_PUBLIC_PATH $SSL_PRIVATE_PATH > /etc/haproxy/certs/all-certs.pem
-sudo chmod -R go-rwx /etc/haproxy/certs
+mkdir -p /etc/haproxy/certs /run/haproxy
+cat $SSL_PUBLIC_PATH $SSL_PRIVATE_PATH > /etc/haproxy/certs/all-certs.pem
+chmod -R go-rwx /etc/haproxy/certs
 
 # HAPROXY_USER_AUTH=""
 
@@ -43,13 +43,13 @@ sudo chmod -R go-rwx /etc/haproxy/certs
 global
   maxconn 4096
   # ssl-server-verify none
-	log /var/log	local0
-	log /var/log	local1 notice
-	chroot /var/lib/haproxy
+	# log /var/log	local0
+	# log /var/log	local1 notice
+	# chroot /var/lib/haproxy
 	stats socket /run/haproxy/admin.sock mode 660 level admin
 	stats timeout 30s
-	user haproxy
-	group haproxy
+	# user haproxy
+	# group haproxy
 	# Default ciphers to use on SSL-enabled listening sockets.
 	# For more information, see ciphers(1SSL). This list is from:
 	#  https://hynek.me/articles/hardening-your-web-servers-ssl-ciphers/
@@ -58,7 +58,7 @@ global
 
 defaults
 	log	global
-  mode tcp
+  mode http
   balance roundrobin
 	option dontlognull
   option redispatch

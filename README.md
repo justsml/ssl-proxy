@@ -1,6 +1,15 @@
 # Simple docker & nginx-based ssl-proxy
 
-An Nginx & Docker-based HTTPS/SSL reverse proxy -- loosely coupled docker service.
+Protect any HTTP service with HTTPS!
+> An Nginx & Docker-based HTTPS/SSL reverse proxy.
+
+## Features
+
+* Fast HTTP2 SSL-enabled reverse proxy
+* Advanced CORS Support (w/ credentials, auto hostname)
+* Automatic WebSockets Support
+* NPN/ALPN Application-Layer Protocol Negotiation [test here](https://tools.keycdn.com/http2-test)
+* Great for securing a Docker Registry, Rancher server, Wordpress, etc
 
 > Overview:
 >
@@ -110,6 +119,12 @@ services:
 
 
 ### Contributing / Dev Notes
+
+> WORK IN PROGRESS:
+
+1. Better CORS support: multi host name
+1. haproxy version
+
 
 ```sh
 # Publish 'latest' version

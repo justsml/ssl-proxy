@@ -146,11 +146,6 @@ http {
     listen    $HTTPS_PORT       ssl http2;
     listen    [::]:$HTTPS_PORT  ssl http2;
 
-#     listen    $HTTPS_PORT       ssl;
-#     listen    [::]:$HTTPS_PORT  ssl ipv6only=on;
-
-    # add_header  Alternate-Protocol "$HTTPS_PORT:npn-spdy/3.1";
-
     # limit_req   zone=gulag burst=500 nodelay;
 
     # chunkin on;
@@ -199,22 +194,27 @@ http {
     # }
 
     location / {
+      set \$acac true;
+      if (\$http_origin = '') {
+        set \$acac false;
+        set \$http_origin "*";
+      }
 
       if (\$request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' \$http_origin;
-        add_header 'Access-Control-Allow-Credentials' 'true';
-        add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
-        add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
-        add_header 'Access-Control-Max-Age' 1728000;
-        add_header 'Content-Type' 'text/plain charset=UTF-8';
-        add_header 'Content-Length' 0;
+        add_header 'Access-Control-Allow-Origin' \$http_origin always;
+        add_header 'Access-Control-Allow-Credentials' \$acac always;
+        add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
+        add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
+        add_header 'Access-Control-Max-Age' 1728000 always;
+        add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
+        add_header 'Content-Length' 0 always;
         return 204;
       }
 
-      add_header 'Access-Control-Allow-Origin' \$http_origin;
-      add_header 'Access-Control-Allow-Credentials' 'true';
-      add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, HEAD, OPTIONS';
-      add_header 'Access-Control-Allow-Headers' 'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP';
+      add_header 'Access-Control-Allow-Origin' \$http_origin always;
+      add_header 'Access-Control-Allow-Credentials' \$acac always;
+      add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
+      add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
 
 
 EOF
@@ -227,7 +227,7 @@ if [ -f "$PASSWD_PATH" ]; then
 EOF
 fi
 # Check if we need to add auth stuff (for docker registry now)
-if [ "$ADD_HEADER" != "" ]; then
+if [ "$ADD_HEADER" != "" ]; the alwaysn
   cat << EOF >> /tmp/nginx.conf
       add_header $ADD_HEADER;
 EOF
@@ -235,7 +235,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      # add_header Strict-Trans port-Security max-age=15768000;
+      # add_header Strict-Trans port-Security max-age=15768000 always;
       proxy_set_header Host \$host;
       proxy_set_header X-Forwarded-Proto \$scheme;
       proxy_set_header X-Real-IP  \$remote_addr;
@@ -275,7 +275,7 @@ cat << EOF >> /tmp/nginx.conf
   }
 
   server {
-    # add_header Strict-Transport-Security;
+    # add_header Strict-Transport-Security always;
 		listen    80;
 		listen    [::]:80 default ipv6only=on;
     server_name $SERVER_NAME;

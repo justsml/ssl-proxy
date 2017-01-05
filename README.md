@@ -5,21 +5,22 @@ Protect any HTTP service with HTTPS!
 
 ## Features
 
-* Fast HTTP2 SSL-enabled reverse proxy
-* Advanced CORS Support (w/ credentials, auto hostname)
-* Automatic WebSockets Support
+* Up-to-date Nginx & Alpine Linux.
+* Fast HTTP2 TLS-enabled reverse proxy
+* Advanced CORS Support (w/ credentials, auto hostname, smart headers)
+* Automatic **WebSockets Support**
 * NPN/ALPN Application-Layer Protocol Negotiation [test here](https://tools.keycdn.com/http2-test)
+* Supports Optional Username & Password (stored using bcrypt at 14+ rounds)
+  * Alternately an `.htpasswd` file can be volume mounted. (Multiple named users)
 * Great for securing a Docker Registry, Rancher server, Wordpress, etc
 
-> Overview:
+> Requirements:
 >
 > 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
-> 1. Choose auth method: (Optional)
->     * Simple: define HTTP_USERNAME & HTTP_PASSWORD (recommended)
->     * Htpasswd: Mount an existing passwd file.
-> 1. Start an ssl-proxy instance.
+> 1. An HTTP Service as your 'backend'
 
-### Docker CLI example:
+
+### Getting Started
 
 For example, to protect an HTTP service:
 
@@ -122,8 +123,9 @@ services:
 
 > WORK IN PROGRESS:
 
+1. HTTPS -> HTTPS proxying support. AKA End-to-end TLS. (skipped due to underwhelming performance and extra complexity in the bash startup script.)
 1. Better CORS support: multi host name
-1. haproxy version
+1. haproxy alt version
 
 
 ```sh

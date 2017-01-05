@@ -92,26 +92,21 @@ http {
  #client_header_buffer_size 1k;
  #large_client_header_buffers 4 4k/8k;
 
-#  # Timeouts, do not keep connections open longer then necessary to reduce
-#  # resource usage and deny Slowloris type attacks.
-#   client_body_timeout    5s; # maximum time between packets the client can pause when sending nginx any data
-#   client_header_timeout  5s; # maximum time the client has to send the entire header to nginx
-#   keepalive_timeout     180s; # timeout which a single keep-alive client connection will stay open
-#   send_timeout      5s; # maximum time between packets nginx is allowed to pause when sending the client data
+  #  # Timeouts, do not keep connections open longer then necessary to reduce
+  #  # resource usage and deny Slowloris type attacks.
+  #   client_body_timeout    5s; # maximum time between packets the client can pause when sending nginx any data
+  #   client_header_timeout  5s; # maximum time the client has to send the entire header to nginx
+  #   keepalive_timeout     180s; # timeout which a single keep-alive client connection will stay open
+  #   send_timeout      5s; # maximum time between packets nginx is allowed to pause when sending the client data
 
-#  ## General Options
-#  #aio             on;  # asynchronous file I/O, fast with ZFS, make sure sendfile=off
-#   charset           utf-8; # adds the line "Content-Type" into response-header, same as "source_charset"
-#   default_type        application/octet-stream;
-#   gzip            off; # disable on the fly gzip compression due to higher latency, only use gzip_static
-#  #gzip_http_version     1.0; # serve gzipped content to all clients including HTTP/1.0
-#   gzip_static         on;  # precompress content (gzip -1) with an external script
-#  #gzip_vary         on;  # send response header "Vary: Accept-Encoding"
-#   gzip_proxied       any;  # allows compressed responses for any request even from proxies
-#   ignore_invalid_headers  on;
-#   include           /etc/mime.types;
-#   keepalive_requests    50;  # number of requests per connection, does not affect SPDY
-#   keepalive_disable     none; # allow all browsers to use keepalive connections
+  #  ## General Options
+  #  #aio             on;  # asynchronous file I/O, fast with ZFS, make sure sendfile=off
+  #   charset           utf-8; # adds the line "Content-Type" into response-header, same as "source_charset"
+  #   default_type        application/octet-stream;
+  #   ignore_invalid_headers  on;
+  #   include           /etc/mime.types;
+  #   keepalive_requests    50;  # number of requests per connection, does not affect SPDY
+  #   keepalive_disable     none; # allow all browsers to use keepalive connections
   # max_ranges        1; # allow a single range header for resumed downloads and to stop large range header DoS attacks
   # msie_padding        off;
   # open_file_cache       max=1000 inactive=1h;
@@ -128,15 +123,6 @@ http {
   # server_name_in_redirect   off; # if off, nginx will use the requested Host header
   # source_charset      utf-8; # same value as "charset"
   # tcp_nodelay         on; # Nagle buffering algorithm, used for keepalive only
-  # tcp_nopush          off;
-
-  #See: ngx_http_v2_module
-  # gzip        off;
-  # gzip_comp_level     2;
-  # gzip_min_length      4096;
-  # gzip_proxied       expired no-cache no-store private auth;
-  # gzip_types         application/x-javascript application/javascript text/javascript text/plain text/xml text/css application/xml;
-
   # tcp_nopush          on;
   sendfile            on;
   keepalive_timeout   90;
@@ -145,6 +131,16 @@ http {
   server {
     listen    $HTTPS_PORT       ssl http2;
     listen    [::]:$HTTPS_PORT  ssl http2;
+
+    # Credit: https://www.keycdn.com/support/enable-gzip-compression/
+    gzip on;
+    gzip_disable "msie6";
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 1;
+    gzip_buffers 16 8k;
+    gzip_http_version 1.1;
+    gzip_types application/javascript application/x-javascript application/rss+xml application/vnd.ms-fontobject application/x-font application/x-font-opentype application/x-font-otf application/x-font-truetype application/x-font-ttf application/x-javascript application/xhtml+xml application/xml font/opentype font/otf font/ttf image/svg+xml image/x-icon text/css text/javascript text/plain text/xml;
 
     # limit_req   zone=gulag burst=500 nodelay;
 
@@ -215,6 +211,7 @@ http {
       add_header 'Access-Control-Allow-Credentials' \$acac always;
       add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
       add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
+      add_header 'Access-Control-Max-Age' 1728000 always;
 
 
 EOF
@@ -227,7 +224,7 @@ if [ -f "$PASSWD_PATH" ]; then
 EOF
 fi
 # Check if we need to add auth stuff (for docker registry now)
-if [ "$ADD_HEADER" != "" ]; the alwaysn
+if [ "$ADD_HEADER" != "" ]; then
   cat << EOF >> /tmp/nginx.conf
       add_header $ADD_HEADER;
 EOF
@@ -275,7 +272,7 @@ cat << EOF >> /tmp/nginx.conf
   }
 
   server {
-    # add_header Strict-Transport-Security always;
+    add_header Strict-Transport-Security always;
 		listen    80;
 		listen    [::]:80 default ipv6only=on;
     server_name $SERVER_NAME;

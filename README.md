@@ -14,13 +14,21 @@ Protect any HTTP service with HTTPS!
   * Alternately an `.htpasswd` file can be volume mounted. (Multiple named users)
 * Great for securing a Docker Registry, Rancher server, Wordpress, etc
 
+## Example/sample SSLLabs/Qualys SSL & TLS Report
+
+> Here's a sample of what you can expect with default configuration.
+
+![image](https://cloud.githubusercontent.com/assets/397632/21792469/4db4a768-d6a7-11e6-8728-97e80c3b5ed2.png)
+![image](https://cloud.githubusercontent.com/assets/397632/21792860/f24203d2-d6a9-11e6-8e35-9138e55c81da.png)
+
+
 > Requirements:
 >
 > 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
 > 1. An HTTP Service as your 'backend'
 
 
-### Getting Started
+## Getting Started
 
 For example, to protect an HTTP service:
 
@@ -114,7 +122,7 @@ services:
     - CERT_PUBLIC_PATH=/certs/fullchain.pem
     - CERT_PRIVATE_PATH=/certs/privkey.pem
     volumes:
-    - /certs:/certs
+    - /certs:/certs:ro
     links:
     - 'rancher-server:rancher-server'
     ports: [ '8080:8080' ]

@@ -57,6 +57,10 @@ error_log   /var/log/nginx/error.log warn;
 pid         /var/run/nginx.pid;
 
 http {
+  map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    '' close;
+  }
 
   upstream upstream {
     server $UPSTREAM_TARGET max_fails=3 fail_timeout=20s;
@@ -85,7 +89,7 @@ http {
   # }
 
   ## Request limits
-  # limit_req_zone  $binary_remote_addr  zone=gulag:1m   rate=60r/m;
+  # limit_req_zone  \$binary_remote_addr  zone=gulag:1m   rate=60r/m;
 
 
  ## Size Limits
@@ -228,7 +232,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      add_header Strict-Trans port-Security max-age=1768000 always;
+      add_header Strict-Transport-Security max-age=1768000 always;
       proxy_pass http://upstream;
       proxy_http_version 1.1;
       proxy_set_header Host \$host;
@@ -239,18 +243,10 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header Upgrade \$http_upgrade;
       proxy_set_header Connection \$connection_upgrade;
       ## Socket Headers
-      if ( \$http_sec_websocket_protocol != '' ) {
-        proxy_set_header Sec-WebSocket-Protocol $http_sec_websocket_protocol;
-      }
-      if ( \$http_sec_websocket_extensions != '' ) {
-        proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
-      }
-      if ( \$http_sec_websocket_key != '' ) {
-        proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
-      }
-      if ( \$http_sec_websocket_version != '' ) {
-        proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
-      }
+      proxy_set_header Sec-Websocket-Key        \$http_sec_websocket_key;
+      proxy_set_header Sec-Websocket-Version    \$http_sec_websocket_version;
+      proxy_set_header Sec-WebSocket-Protocol   \$http_sec_websocket_protocol;
+      proxy_set_header Sec-WebSocket-Extensions \$http_sec_websocket_extensions;
 
       # Recommended:
       proxy_buffering off;
@@ -282,9 +278,9 @@ cat << EOF >> /tmp/nginx.conf
   }
 
   server {
-    add_header Strict-Transport-Security always;
-		listen    80;
-		listen    [::]:80 default ipv6only=on;
+    add_header Strict-Transport-Security max-age=1768000 always;
+    listen    80;
+    listen    [::]:80 default ipv6only=on;
     server_name $SERVER_NAME;
     return 301 https://\$server_name:\$server_port\$request_uri;
   }

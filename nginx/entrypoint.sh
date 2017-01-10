@@ -14,6 +14,7 @@ CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"$SSL_PRIVATE_PATH"}
 CERT_PUBLIC_PATH=${CERT_PUBLIC_PATH-"/certs/fullchain.pem"}
 CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
 HTTPS_PORT=${HTTPS_PORT-"443"}
+TLS_PROTOCOLS=${TLS_PROTOCOLS-"TLSv1 TLSv1.1 TLSv1.2"}
 
 if [ "$SERVER_NAME" == "" ]; then
   echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
@@ -144,12 +145,16 @@ http {
     ssl_session_tickets on;
     ssl_session_cache shared:SSL:12m;
     # intermediate configuration. tweak to your needs.
-    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+
+    ssl_protocols $TLS_PROTOCOLS; #TLSv1 TLSv1.1 TLSv1.2
+
     ssl_prefer_server_ciphers on;
 
     # NOTE: \$HTTPS_RC4 controls RC4 in entrypoint.sh
-    ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA $HTTPS_RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
     # Credit: https://blog.ivanristic.com/2013/08/configuring-apache-nginx-and-openssl-for-forward-secrecy.html
+    # ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA $HTTPS_RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
+    # Credit: https://raymii.org/s/tutorials/Strong_SSL_Security_On_nginx.html#The_Cipher_Suite
+    ssl_ciphers 'EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH';
 
     # client_max_body_size 0; # disable any limits to avoid HTTP 413 for large image uploads
 

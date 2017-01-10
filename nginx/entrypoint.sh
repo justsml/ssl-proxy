@@ -59,7 +59,7 @@ pid         /var/run/nginx.pid;
 http {
 
   upstream upstream {
-    server $UPSTREAM_TARGET max_fails=50 fail_timeout=90s;
+    server $UPSTREAM_TARGET max_fails=3 fail_timeout=20s;
   }
 
   include       /etc/nginx/mime.types;
@@ -71,6 +71,7 @@ http {
   access_log  /var/log/nginx/access.log  main;
 
   client_max_body_size    4g;
+
   # # Deny certain User-Agents (case insensitive)
   # # The ~* makes it case insensitive as opposed to just a ~
   # if ($http_user_agent ~* (Baiduspider|Jullo) ) {
@@ -150,14 +151,16 @@ http {
     ssl_certificate       $SSL_PUBLIC_PATH;
     ssl_certificate_key   $SSL_PRIVATE_PATH;
     ssl_buffer_size 4k;
-    ssl_session_timeout 4h;
+    ssl_session_timeout 2h;
     ssl_session_tickets on;
-    ssl_session_cache shared:SSL:72m;
-    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:12m;
     # intermediate configuration. tweak to your needs.
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-    ssl_ciphers 'ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA:!DSS';
-    # ssl_stapling on;             # staple the ssl cert to the initial reply returned to the client for speed
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
+    # Credit: https://blog.ivanristic.com/2013/08/configuring-apache-nginx-and-openssl-for-forward-secrecy.html
+
+    # ssl_stapling on; # staple the ssl cert to the initial reply returned to the client for speed
 
     # Only allow GET, HEAD and POST request methods. Since this a proxy you may
     # want to be more restrictive with your request methods. The calls are going
@@ -182,13 +185,6 @@ http {
 
     # expires     5m;
 
-    # error_page 405 =200 @405;
-    # location @405 {
-    #   proxy_set_header Host \$host;
-    #   proxy_set_header X-Forwarded-For \$scheme;
-    #   proxy_pass http://upstream;
-    # }
-
     location / {
       set \$acac true;
       if (\$http_origin = '') {
@@ -200,8 +196,8 @@ http {
         add_header 'Access-Control-Allow-Origin' \$http_origin always;
         add_header 'Access-Control-Allow-Credentials' \$acac always;
         add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
-        add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
-        add_header 'Access-Control-Max-Age' 1728000 always;
+        add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
+        add_header 'Access-Control-Max-Age' 864000 always;
         add_header 'Content-Type' 'text/plain; charset=UTF-8' always;
         add_header 'Content-Length' 0 always;
         return 204;
@@ -210,8 +206,8 @@ http {
       add_header 'Access-Control-Allow-Origin' \$http_origin always;
       add_header 'Access-Control-Allow-Credentials' \$acac always;
       add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
-      add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
-      add_header 'Access-Control-Max-Age' 1728000 always;
+      add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
+      add_header 'Access-Control-Max-Age' 864000 always;
 
 
 EOF
@@ -232,17 +228,23 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      # add_header Strict-Trans port-Security max-age=15768000 always;
+      add_header Strict-Trans port-Security max-age=1768000 always;
+      proxy_pass http://upstream;
+      proxy_http_version 1.1;
       proxy_set_header Host \$host;
       proxy_set_header X-Forwarded-Proto \$scheme;
       proxy_set_header X-Real-IP  \$remote_addr;
       proxy_set_header X-Forwarded-Port \$server_port;
       proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-      proxy_pass http://upstream;
-      proxy_http_version 1.1;
       proxy_set_header Upgrade \$http_upgrade;
-      proxy_set_header Connection "Upgrade";
+      proxy_set_header Connection \$connection_upgrade;
+      ## Socket Headers
+      proxy_set_header Sec-WebSocket-Protocol $http_sec_websocket_protocol always;
+      proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions always;
+      proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key always;
+      proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version always;
 
+      # Recommended:
       proxy_buffering off;
       proxy_buffer_size 4k;
 

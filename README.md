@@ -10,6 +10,7 @@ Protect any HTTP service with HTTPS!
 * Advanced CORS Support (w/ credentials, auto hostname, smart headers)
 * Automatic **WebSockets Support**
 * NPN/ALPN Application-Layer Protocol Negotiation [test here](https://tools.keycdn.com/http2-test)
+* TLS Forward secrecy (aka Perfect Forward Secrecy).
 * Supports Optional Username & Password (stored using bcrypt at 14+ rounds)
   * Alternately an `.htpasswd` file can be volume mounted. (Multiple named users)
 * Great for securing a Docker Registry, Rancher server, Wordpress, etc

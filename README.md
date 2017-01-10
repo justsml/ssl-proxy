@@ -32,23 +32,42 @@ For example, to protect an HTTP service:
 docker run -d --restart=unless-stopped \
   --name docker-registry \
   -v /data/registry/registry:/var/lib/registry \
-  registry:2.5
+  registry:2.0
 
 # Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
 docker run -d --restart=unless-stopped \
   --name ssl-proxy \
   -p 5000:5000 \
-  -e 'HTTPS_PORT=5000' \
-  -e 'HTTP_USERNAME=devops' \
-  -e 'HTTP_PASSWORD=secure' \
   -e 'SERVER_NAME=hub.example.com' \
   -e 'UPSTREAM_TARGET=docker-registry:5000' \
-  -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
-  -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
+  -e 'HTTPS_PORT=5000' \
+  -e 'USERNAME=devops' \
+  -e 'PASSWORD=secure' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
   -e "ADD_HEADER='Docker-Distribution-Api-Version' 'registry/2.0' always" \
   -v '/certs:/certs:ro' \
   --link 'docker-registry:docker-registry' \
   justsml/ssl-proxy:latest
+
+# ALT Options
+# Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
+docker run -d --restart=unless-stopped \
+  --name ssl-proxy \
+  -p 5000:5000 \
+  -e 'SERVER_NAME=hub.example.com' \
+  -e 'UPSTREAM_TARGET=docker-registry:5000' \
+  -e 'EXPIRES_DEFAULT=-1' \
+  -e 'HTTPS_PORT=5000' \
+  -e 'USERNAME=devops' \
+  -e 'PASSWORD=secure' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
+  -e "ADD_HEADER='Docker-Distribution-Api-Version' 'registry/2.0' always" \
+  -v '/certs:/certs:ro' \
+  --link 'docker-registry:docker-registry' \
+  justsml/ssl-proxy:latest
+
 
 ```
 
@@ -71,8 +90,8 @@ docker run -d --restart=unless-stopped \
   -e 'HTTPS_PORT=8080' \
   -e 'SERVER_NAME=rancher.example.com' \
   -e 'UPSTREAM_TARGET=rancher-server:8080' \
-  -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
-  -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
   -v '/certs:/certs:ro' \
   --link 'rancher-server:rancher-server' \
   justsml/ssl-proxy:latest
@@ -92,8 +111,8 @@ services:
     - HTTPS_PORT=8080
     - SERVER_NAME=rancher.example.com
     - UPSTREAM_TARGET=rancher-server:8080
-    - SSL_PUBLIC_PATH=/certs/fullchain.pem
-    - SSL_PRIVATE_PATH=/certs/privkey.pem
+    - CERT_PUBLIC_PATH=/certs/fullchain.pem
+    - CERT_PRIVATE_PATH=/certs/privkey.pem
     volumes:
     - /certs:/certs
     links:
@@ -107,16 +126,30 @@ services:
 ```
 
 
+===================
+
+
+Arguments
+-------------------
+
+|Name               | Default/Reqd  | Notes
+|-------------------|---------------|-----------------------|
+|CERT_PUBLIC_PATH   | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
+|CERT_PRIVATE_PATH  | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
+|SERVER_NAME        | Required      | Primary domain name. Not restricting.
+|UPSTREAM_TARGET    | Required      | HTTP target host:port. Typically an internally routable address. e.g. `localhost:9090` or `rancher-server:8080`
+|HTTPS_PORT         | 443/Required  | Needed for URL rewriting.
+|ALLOW_RC4          | Not set       | Backwards Compatible Option Required for Java 6 or WinXP/IE8
+|EXPIRES_DEFAULT    | Not set       | Set to apply a default expiration value for nginx `location /`. Useful for app & caching proxies. (For app use `-1` and for caching proxy something like `6h`)
+|USERNAME           | admin         | Both PASSWORD and USERNAME must be set in order to use Basic authorization
+|PASSWORD           |               | Both PASSWORD and USERNAME must be set in order to use Basic authorization
+|PASSWD_PATH        | /etc/nginx/.htpasswd | Alternate auth support (don't combine with USERNAME/PASSWORD) Bind-mount a custom path to `/etc/nginx/.htpasswd`
+|ADD_HEADER         | Not set       | Useful for tagging routes in your infrastructure.
 
 
 ===================
+
 -------------------
-===================
--------------------
-
-
-
-
 
 
 ### Contributing / Dev Notes
@@ -148,12 +181,12 @@ docker run --rm \
   -v ~/certs/xray:/certs \
   -p 5000:5000 \
   -e 'HTTPS_PORT=5000' \
-  -e 'HTTP_USERNAME=devops' \
-  -e 'HTTP_PASSWORD=secure' \
+  -e 'USERNAME=devops' \
+  -e 'PASSWORD=secure' \
   -e 'SERVER_NAME=hub.example.com' \
   -e 'UPSTREAM_TARGET=www.google.com:80' \
-  -e 'SSL_PUBLIC_PATH=/certs/fullchain.pem' \
-  -e 'SSL_PRIVATE_PATH=/certs/privkey.pem' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
   ssl-proxy:latest
 
 

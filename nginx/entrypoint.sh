@@ -1,44 +1,57 @@
 #!/bin/bash
 set -e
-set -x
+# set -x
 
 printf "\n\n ********** STARTING NGINX HTTPS/AUTH PROXY ********** \n\n\n"
 
+# Default location, can be changed to another location or simply bind-mount w/ `-v ~/.htpasswd:/etc/nginx/.htpasswd:ro`
+PASSWD_PATH=${PASSWD_PATH-"/etc/nginx/.htpasswd"}
+
+USERNAME=${USERNAME-"$HTTP_USERNAME"}
+PASSWORD=${PASSWORD-"$HTTP_PASSWORD"}
+CERT_PUBLIC_PATH=${CERT_PUBLIC_PATH-"$SSL_PUBLIC_PATH"}
+CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"$SSL_PRIVATE_PATH"}
+CERT_PUBLIC_PATH=${CERT_PUBLIC_PATH-"/certs/fullchain.pem"}
+CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
+HTTPS_PORT=${HTTPS_PORT-"443"}
+
 if [ "$SERVER_NAME" == "" ]; then
   echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
-  exit -69
+  SERVER_NAME=`hostname -f`
+  printf "\n###### GUESSING SERVER_NAME: $SERVER_NAME \n^^^^^ DETECTED ^^^^^\n"
 fi
-if [ "$SSL_PUBLIC_PATH" == "" ]; then
-  echo "Sh*t, you forgot to set the env var 'SSL_PUBLIC_PATH'"
+if [ ! -f "$CERT_PUBLIC_PATH" ]; then
+  printf >&2 "Sh*t, '\$CERT_PUBLIC_PATH' not found!\nNOT_FOUND: $CERT_PUBLIC_PATH\n"
   exit -68
 fi
-if [ "$SSL_PRIVATE_PATH" == "" ]; then
-  echo "Sh*t, you forgot to set the env var 'SSL_PRIVATE_PATH'"
+if [ ! -f "$CERT_PRIVATE_PATH" ]; then
+  printf >&2 "Sh*t, '\$CERT_PRIVATE_PATH' not found!\nNOT_FOUND: $CERT_PRIVATE_PATH\n"
   exit -67
 fi
 if [ "$UPSTREAM_TARGET" == "" ]; then
   echo "Sh*t, you forgot to set the env var 'UPSTREAM_TARGET'"
   exit -66
 fi
-if [ "$HTTPS_PORT" == "" ]; then
-  echo "Sh*t, you forgot to set the env var 'HTTPS_PORT'"
-  exit -69
+if [ "$ALLOW_RC4" != "" ]; then
+  HTTPS_RC4=" RC4 "
+  printf "\n\nWARNING: Enabling RC4 Ciphers - IE8/WinXP & Java6 Requirement <<<<<<<<<<<<\n"
+  printf "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AHHH! BAD IDEA ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+  printf "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AHHH! BAD IDEA ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+  printf "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AHHH! BAD IDEA ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+  printf "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ AHHH! BAD IDEA ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
+  sleep 30s
+else
+  HTTPS_RC4=" !RC4 "
 fi
-# if [ "$SERVER_NAME" == "" ]; then
-#   echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
-#   exit -69
-# fi
 
-export PASSWD_PATH=/etc/nginx/.htpasswd
-
-if [ "$HTTP_USERNAME" != "" ]; then
+if [ "$PASSWORD" != "" ]; then
   if [ ! -f $PASSWD_PATH ]; then
-    printf "\n\nCreating Password File for user $HTTP_USERNAME\n\n"
-    htpasswd -BbC 15 -c /tmp/.htpasswd $HTTP_USERNAME $HTTP_PASSWORD
+    printf "\n\nCreating Password File for user $USERNAME\n\n"
+    htpasswd -BbC 15 -c /tmp/.htpasswd $USERNAME $PASSWORD
     mv /tmp/.htpasswd $PASSWD_PATH
-  elif [ "$(grep $HTTP_USERNAME $PASSWD_PATH)" == "" ]; then
-    printf "\n\nAPPENDING TO EXISTING Password File - user $HTTP_USERNAME\n\n"
-    htpasswd -BbC 15 -c $PASSWD_PATH $HTTP_USERNAME $HTTP_PASSWORD
+  elif [ "$(grep $USERNAME $PASSWD_PATH)" == "" ]; then
+    printf "\n\nAPPENDING TO EXISTING Password File - user $USERNAME\n\n"
+    htpasswd -BbC 15 -c $PASSWD_PATH $USERNAME $PASSWORD
   fi
 fi
 
@@ -91,44 +104,16 @@ http {
   ## Request limits
   # limit_req_zone  \$binary_remote_addr  zone=gulag:1m   rate=60r/m;
 
-
- ## Size Limits
- #client_body_buffer_size   8k;
- #client_header_buffer_size 1k;
- #large_client_header_buffers 4 4k/8k;
-
-  #  # Timeouts, do not keep connections open longer then necessary to reduce
-  #  # resource usage and deny Slowloris type attacks.
-  #   client_body_timeout    5s; # maximum time between packets the client can pause when sending nginx any data
-  #   client_header_timeout  5s; # maximum time the client has to send the entire header to nginx
-  #   keepalive_timeout     180s; # timeout which a single keep-alive client connection will stay open
-  #   send_timeout      5s; # maximum time between packets nginx is allowed to pause when sending the client data
+  ## Size Limits
+  #client_body_buffer_size   8k;
+  #client_header_buffer_size 1k;
+  #large_client_header_buffers 4 4k/8k;
 
   #  ## General Options
-  #  #aio             on;  # asynchronous file I/O, fast with ZFS, make sure sendfile=off
-  #   charset           utf-8; # adds the line "Content-Type" into response-header, same as "source_charset"
-  #   default_type        application/octet-stream;
-  #   ignore_invalid_headers  on;
-  #   include           /etc/mime.types;
-  #   keepalive_requests    50;  # number of requests per connection, does not affect SPDY
-  #   keepalive_disable     none; # allow all browsers to use keepalive connections
-  # max_ranges        1; # allow a single range header for resumed downloads and to stop large range header DoS attacks
+  max_ranges        1; # allow a single range header for resumed downloads and to stop large range header DoS attacks
   # msie_padding        off;
-  # open_file_cache       max=1000 inactive=1h;
-  # open_file_cache_errors  on;
-  # open_file_cache_min_uses  1;
-  # open_file_cache_valid   1h;
-  # output_buffers      1 512;
-  # postpone_output       1400;   # postpone sends to match our machine's MSS
-  # read_ahead        512K;   # kernel read head set to the output_buffers
-  # recursive_error_pages   on;
-  # reset_timedout_connection on;  # reset timed out connections freeing ram
-  # sendfile          on;  # on for decent direct disk I/O
-  # server_tokens       on; # version number in error pages
-  # server_name_in_redirect   off; # if off, nginx will use the requested Host header
-  # source_charset      utf-8; # same value as "charset"
-  # tcp_nodelay         on; # Nagle buffering algorithm, used for keepalive only
-  # tcp_nopush          on;
+  reset_timedout_connection on;  # reset timed out connections freeing ram
+  server_name_in_redirect   off; # if off, nginx will use the requested Host header
   sendfile            on;
   keepalive_timeout   90;
 
@@ -152,8 +137,8 @@ http {
     # chunkin on;
 
     server_name           $SERVER_NAME;
-    ssl_certificate       $SSL_PUBLIC_PATH;
-    ssl_certificate_key   $SSL_PRIVATE_PATH;
+    ssl_certificate       $CERT_PUBLIC_PATH;
+    ssl_certificate_key   $CERT_PRIVATE_PATH;
     ssl_buffer_size 4k;
     ssl_session_timeout 2h;
     ssl_session_tickets on;
@@ -161,35 +146,29 @@ http {
     # intermediate configuration. tweak to your needs.
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
     ssl_prefer_server_ciphers on;
-    ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA !RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
+
+    # NOTE: \$HTTPS_RC4 controls RC4 in entrypoint.sh
+    ssl_ciphers "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA $HTTPS_RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS";
     # Credit: https://blog.ivanristic.com/2013/08/configuring-apache-nginx-and-openssl-for-forward-secrecy.html
-
-    # ssl_stapling on; # staple the ssl cert to the initial reply returned to the client for speed
-
-    # Only allow GET, HEAD and POST request methods. Since this a proxy you may
-    # want to be more restrictive with your request methods. The calls are going
-    # to be passed to the back end server and nginx does not know what it
-    # normally accepts, so everything gets passed. If we only need to accept GET
-    # HEAD and POST then limit that here.
-    # if ($request_method !~ ^(GET|HEAD|POST|PUT|DELETE)$ ) {
-    #     return 403;
-    # }
 
     # client_max_body_size 0; # disable any limits to avoid HTTP 413 for large image uploads
 
     # # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
     # ssl_dhparam /etc/nginx/dh2048.pem;
 
-    # client_body_timeout    2s; # maximum time between packets the client can pause when sending nginx any data
-    # client_header_timeout  2s; # maximum time the client has to send the entire header to nginx
-    # keepalive_timeout     28s; # timeout which a single keep-alive client connection will stay open
-    # send_timeout      10s; # maximum time between packets nginx is allowed to pause when sending the client data
-    # spdy_keepalive_timeout 128s; # inactivity timeout after which the SPDY connection is closed
-    # spdy_recv_timeout    2s; # timeout if nginx is currently expecting data from the client but nothing arrives
-
-    # expires     5m;
-
     location / {
+EOF
+
+# Check expires var
+if [ "$EXPIRES_DEFAULT" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      expires $EXPIRES_DEFAULT;
+EOF
+fi
+
+cat << EOF >> /tmp/nginx.conf
+
+
       set \$acac true;
       if (\$http_origin = '') {
         set \$acac false;
@@ -232,7 +211,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      add_header Strict-Transport-Security max-age=1768000 always;
+      add_header Strict-Transport-Security max-age=17968000 always;
       proxy_pass http://upstream;
       proxy_http_version 1.1;
       proxy_set_header Host \$host;
@@ -278,7 +257,7 @@ cat << EOF >> /tmp/nginx.conf
   }
 
   server {
-    add_header Strict-Transport-Security max-age=1768000 always;
+    add_header Strict-Transport-Security max-age=17968000 always;
     listen    80;
     listen    [::]:80 default ipv6only=on;
     server_name $SERVER_NAME;

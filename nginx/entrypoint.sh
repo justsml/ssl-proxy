@@ -47,11 +47,11 @@ fi
 if [ "$PASSWORD" != "" ]; then
   if [ ! -f $PASSWD_PATH ]; then
     printf "\n\nCreating Password File for user $USERNAME\n\n"
-    htpasswd -BbC 15 -c /tmp/.htpasswd $USERNAME $PASSWORD
+    htpasswd -BbC 12 -c /tmp/.htpasswd $USERNAME $PASSWORD
     mv /tmp/.htpasswd $PASSWD_PATH
   elif [ "$(grep $USERNAME $PASSWD_PATH)" == "" ]; then
     printf "\n\nAPPENDING TO EXISTING Password File - user $USERNAME\n\n"
-    htpasswd -BbC 15 -c $PASSWD_PATH $USERNAME $PASSWORD
+    htpasswd -BbC 12 -c $PASSWD_PATH $USERNAME $PASSWORD
   fi
 fi
 

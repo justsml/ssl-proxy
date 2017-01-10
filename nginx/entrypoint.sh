@@ -141,7 +141,7 @@ http {
     gzip_comp_level 1;
     gzip_buffers 16 8k;
     gzip_http_version 1.1;
-    gzip_types application/javascript application/x-javascript application/rss+xml application/vnd.ms-fontobject application/x-font application/x-font-opentype application/x-font-otf application/x-font-truetype application/x-font-ttf application/x-javascript application/xhtml+xml application/xml font/opentype font/otf font/ttf image/svg+xml image/x-icon text/css text/javascript text/plain text/xml;
+    gzip_types application/javascript application/rss+xml application/vnd.ms-fontobject application/x-font application/x-font-opentype application/x-font-otf application/x-font-truetype application/x-font-ttf application/x-javascript application/xhtml+xml application/xml font/opentype font/otf font/ttf image/svg+xml image/x-icon text/css text/javascript text/plain text/xml;
 
     # limit_req   zone=gulag burst=500 nodelay;
 
@@ -239,10 +239,18 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header Upgrade \$http_upgrade;
       proxy_set_header Connection \$connection_upgrade;
       ## Socket Headers
-      proxy_set_header Sec-WebSocket-Protocol $http_sec_websocket_protocol always;
-      proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions always;
-      proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key always;
-      proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version always;
+      if ( \$http_sec_websocket_protocol != '' ) {
+        proxy_set_header Sec-WebSocket-Protocol $http_sec_websocket_protocol;
+      }
+      if ( \$http_sec_websocket_extensions != '' ) {
+        proxy_set_header Sec-WebSocket-Extensions $http_sec_websocket_extensions;
+      }
+      if ( \$http_sec_websocket_key != '' ) {
+        proxy_set_header Sec-WebSocket-Key $http_sec_websocket_key;
+      }
+      if ( \$http_sec_websocket_version != '' ) {
+        proxy_set_header Sec-WebSocket-Version $http_sec_websocket_version;
+      }
 
       # Recommended:
       proxy_buffering off;

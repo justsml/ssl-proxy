@@ -85,7 +85,7 @@ http {
   }
 
   ## Request limits
-  limit_req_zone  $binary_remote_addr  zone=throttled_site:10m  rate=2r/s;
+  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=5r/s;
   limit_req_log_level error;
   # return 429 (too many requests) instead of 503 (unavailable)
   limit_req_status 429;
@@ -115,10 +115,11 @@ http {
 
 
   # https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
-  client_body_buffer_size 10K;
+  client_body_buffer_size 256K;
   client_header_buffer_size 1k;
   large_client_header_buffers 2 32k;
 
+  sendfile_max_chunk  1m;
 
   #  ## General Options
   max_ranges        1; # allow a single range header for resumed downloads and to stop large range header DoS attacks
@@ -195,6 +196,7 @@ fi
 cat << EOF >> /tmp/nginx.conf
 
       limit_req zone=throttled_site burst=10 nodelay;
+      limit_conn conn_limit_per_ip 10;
 
       set \$acac true;
       if (\$http_origin = '') {

@@ -65,7 +65,11 @@ fi
 cat << EOF > /tmp/nginx.conf
 worker_processes auto;
 
-events { worker_connections 1024; }
+events {
+  worker_connections 4096;
+  multi_accept on;
+  use epoll;
+}
 
 error_log   /var/log/nginx/error.log warn;
 pid         /var/run/nginx.pid;
@@ -80,18 +84,25 @@ http {
     server $UPSTREAM_TARGET max_fails=3 fail_timeout=20s;
   }
 
+  ## Request limits
+  limit_req_zone  $binary_remote_addr  zone=throttled_site:10m  rate=2r/s;
+  limit_req_log_level error;
+  # return 429 (too many requests) instead of 503 (unavailable)
+  limit_req_status 429;
+  limit_conn_status 429;
+
+
   include       /etc/nginx/mime.types;
   default_type  application/octet-stream;
-  log_format  main  '[\$time_local] \$status \$remote_addr "\$http_x_forwarded_for" "\$remote_user" "\$request" '
-            '\$body_bytes_sent "\$http_referer" '
-            '"\$http_user_agent"';
+  log_format  main  '[\$time_local]	\$status	\$remote_addr	"\$http_x_forwarded_for"	"\$remote_user"	"\$request"	'
+    '\$body_bytes_sent	"\$http_referer"	"\$http_user_agent"	ssl-proxy:$HOSTNAME';
 
   access_log  /var/log/nginx/access.log  main;
 
   client_max_body_size    4g;
 
-  # # Deny certain User-Agents (case insensitive)
-  # # The ~* makes it case insensitive as opposed to just a ~
+  # Deny certain User-Agents (case insensitive)
+  # The ~* makes it case insensitive as opposed to just a ~
   # if ($http_user_agent ~* (Baiduspider|Jullo) ) {
   #   return 405;
   # }
@@ -102,22 +113,33 @@ http {
   #   return 405;
   # }
 
-  ## Request limits
-  # limit_req_zone  \$binary_remote_addr  zone=gulag:1m   rate=60r/m;
 
-  ## Size Limits
-  #client_body_buffer_size   8k;
-  #client_header_buffer_size 1k;
-  #large_client_header_buffers 4 4k/8k;
+  # https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
+  client_body_buffer_size 10K;
+  client_header_buffer_size 1k;
+  large_client_header_buffers 2 32k;
+
 
   #  ## General Options
   max_ranges        1; # allow a single range header for resumed downloads and to stop large range header DoS attacks
   # msie_padding        off;
   reset_timedout_connection on;  # reset timed out connections freeing ram
   server_name_in_redirect   off; # if off, nginx will use the requested Host header
-  sendfile            on;
-  keepalive_timeout   90;
+  # sendfile            on;
+  # keepalive_timeout   90;
 
+# https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
+  client_body_timeout 12;
+  client_header_timeout 12;
+  keepalive_timeout 60;
+  send_timeout 10;
+
+# https://www.linode.com/docs/websites/nginx/configure-nginx-for-optimized-performance
+  keepalive_timeout 65;
+  keepalive_requests 100000;
+  sendfile on;
+  tcp_nopush on;
+  tcp_nodelay on;
 
   server {
     listen    $HTTPS_PORT       ssl http2;
@@ -130,10 +152,9 @@ http {
     gzip_proxied any;
     gzip_comp_level 1;
     gzip_buffers 16 8k;
+    gzip_min_length  4096;
     gzip_http_version 1.1;
     gzip_types application/javascript application/rss+xml application/vnd.ms-fontobject application/x-font application/x-font-opentype application/x-font-otf application/x-font-truetype application/x-font-ttf application/x-javascript application/xhtml+xml application/xml font/opentype font/otf font/ttf image/svg+xml image/x-icon text/css text/javascript text/plain text/xml;
-
-    # limit_req   zone=gulag burst=500 nodelay;
 
     # chunkin on;
 
@@ -173,6 +194,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
+      limit_req zone=throttled_site burst=10 nodelay;
 
       set \$acac true;
       if (\$http_origin = '') {

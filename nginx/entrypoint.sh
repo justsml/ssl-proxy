@@ -85,7 +85,7 @@ http {
   }
 
   ## Request limits
-  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=6r/s;
+  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=8r/s;
   limit_req_log_level error;
   # return 429 (too many requests) instead of 503 (unavailable)
   limit_req_status 429;
@@ -195,7 +195,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      limit_req zone=throttled_site burst=10 nodelay;
+      limit_req zone=throttled_site burst=15 nodelay;
       # limit_conn conn_limit_per_ip 10;
 
       set \$acac true;

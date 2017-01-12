@@ -130,13 +130,13 @@ http {
   # keepalive_timeout   90;
 
 # https://www.digitalocean.com/community/tutorials/how-to-optimize-nginx-configuration
-  client_body_timeout 12;
-  client_header_timeout 12;
+  client_body_timeout 30;
+  client_header_timeout 30;
   keepalive_timeout 60;
-  send_timeout 10;
+  send_timeout 15;
 
 # https://www.linode.com/docs/websites/nginx/configure-nginx-for-optimized-performance
-  keepalive_timeout 65;
+  # keepalive_timeout 65;
   keepalive_requests 100000;
   sendfile on;
   tcp_nopush on;
@@ -196,7 +196,7 @@ fi
 cat << EOF >> /tmp/nginx.conf
 
       limit_req zone=throttled_site burst=10 nodelay;
-      limit_conn conn_limit_per_ip 10;
+      # limit_conn conn_limit_per_ip 10;
 
       set \$acac true;
       if (\$http_origin = '') {

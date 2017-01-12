@@ -85,7 +85,7 @@ http {
   }
 
   ## Request limits
-  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=5r/s;
+  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=6r/s;
   limit_req_log_level error;
   # return 429 (too many requests) instead of 503 (unavailable)
   limit_req_status 429;

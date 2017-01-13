@@ -185,18 +185,20 @@ http {
 
     location / {
 EOF
-
 # Check expires var
 if [ "$EXPIRES_DEFAULT" != "" ]; then
   cat << EOF >> /tmp/nginx.conf
       expires $EXPIRES_DEFAULT;
 EOF
 fi
-
-cat << EOF >> /tmp/nginx.conf
-
-      limit_req zone=throttled_site burst=15 nodelay;
+# Check expires var
+if [ "$RATE_LIMIT" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      limit_req zone=throttled_site burst=20 nodelay;
       # limit_conn conn_limit_per_ip 10;
+EOF
+fi
+cat << EOF >> /tmp/nginx.conf
 
       set \$acac true;
       if (\$http_origin = '') {

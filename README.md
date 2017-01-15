@@ -38,13 +38,13 @@ For example, to protect an HTTP service:
 
 ```sh
 # Create docker registry - use it's internal exposed port 5000
-docker run -d --restart=unless-stopped \
+docker run -d --restart=on-failure:5 \
   --name docker-registry \
   -v /data/registry/registry:/var/lib/registry \
   registry:2.0
 
 # Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
-docker run -d --restart=unless-stopped \
+docker run -d --restart=on-failure:5 \
   --name ssl-proxy \
   -p 5000:5000 \
   -e 'SERVER_NAME=hub.example.com' \
@@ -61,7 +61,7 @@ docker run -d --restart=unless-stopped \
 
 # ALT Options
 # Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
-docker run -d --restart=unless-stopped \
+docker run -d --restart=on-failure:5 \
   --name ssl-proxy \
   -p 5000:5000 \
   -e 'SERVER_NAME=hub.example.com' \
@@ -86,15 +86,15 @@ docker run -d --restart=unless-stopped \
 
 ## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
 # Start Rancher w/ local port binding at 8080
-docker run -d --restart=unless-stopped \
+docker run -d --restart=on-failure:5 \
   --name rancher-server \
   -p 8080 \
   -v /data/rancher/mysql:/var/lib/mysql \
   rancher/server:latest
 
 # Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
-docker run -d --restart=unless-stopped \
-  --name ssl-proxy \
+docker run -d --restart=on-failure:5 \
+  --name rancher-proxy \
   -p 8080:8080 \
   -e 'HTTPS_PORT=8080' \
   -e 'SERVER_NAME=rancher.example.com' \

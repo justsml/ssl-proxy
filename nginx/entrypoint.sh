@@ -85,7 +85,7 @@ http {
   }
 
   ## Request limits
-  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=8r/s;
+  limit_req_zone  \$binary_remote_addr  zone=throttled_site:10m  rate=${RATE_LIMIT-8}r/s;
   limit_req_log_level error;
   # return 429 (too many requests) instead of 503 (unavailable)
   limit_req_status 429;
@@ -168,7 +168,7 @@ http {
     ssl_session_cache shared:SSL:12m;
     # intermediate configuration. tweak to your needs.
 
-    ssl_protocols $TLS_PROTOCOLS; #TLSv1 TLSv1.1 TLSv1.2
+    ssl_protocols $TLS_PROTOCOLS;
 
     ssl_prefer_server_ciphers on;
 
@@ -180,25 +180,17 @@ http {
 
     # client_max_body_size 0; # disable any limits to avoid HTTP 413 for large image uploads
 
-    # # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
-    # ssl_dhparam /etc/nginx/dh2048.pem;
-
-    location / {
 EOF
 # Check expires var
-if [ "$EXPIRES_DEFAULT" != "" ]; then
+if [ -f "$DHPARAM_PATH" ]; then
   cat << EOF >> /tmp/nginx.conf
-      expires $EXPIRES_DEFAULT;
-EOF
-fi
-# Check expires var
-if [ "$RATE_LIMIT" != "" ]; then
-  cat << EOF >> /tmp/nginx.conf
-      limit_req zone=throttled_site burst=20 nodelay;
-      # limit_conn conn_limit_per_ip 10;
+    # Diffie-Hellman parameter for DHE ciphersuites, recommended 2048 bits
+    ssl_dhparam ${DHPARAM_PATH};
 EOF
 fi
 cat << EOF >> /tmp/nginx.conf
+
+    location / {
 
       set \$acac true;
       if (\$http_origin = '') {
@@ -223,9 +215,20 @@ cat << EOF >> /tmp/nginx.conf
       add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
       add_header 'Access-Control-Max-Age' 864000 always;
 
-
 EOF
-
+# Check expires var
+if [ "$EXPIRES_DEFAULT" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      expires $EXPIRES_DEFAULT;
+EOF
+fi
+# Check expires var
+if [ "$RATE_LIMIT" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      limit_req zone=throttled_site burst=20 nodelay;
+      # limit_conn conn_limit_per_ip 10;
+EOF
+fi
 # Check if we need to add auth stuff (for docker registry now)
 if [ -f "$PASSWD_PATH" ]; then
   cat << EOF >> /tmp/nginx.conf
@@ -242,7 +245,7 @@ fi
 
 cat << EOF >> /tmp/nginx.conf
 
-      add_header Strict-Transport-Security max-age=17968000 always;
+      # add_header Strict-Transport-Security max-age=17968000 always;
       proxy_pass http://upstream;
       proxy_http_version 1.1;
       proxy_set_header Host \$host;
@@ -288,7 +291,7 @@ cat << EOF >> /tmp/nginx.conf
   }
 
   server {
-    add_header Strict-Transport-Security max-age=17968000 always;
+    # add_header Strict-Transport-Security max-age=17968000 always;
     listen    80;
     listen    [::]:80 default ipv6only=on;
     server_name $SERVER_NAME;

@@ -10,7 +10,7 @@ Protect any HTTP service with HTTPS!
 * Advanced CORS Support (w/ credentials, auto hostname, smart headers)
 * Automatic **WebSockets Support**
 * NPN/ALPN Application-Layer Protocol Negotiation [test here](https://tools.keycdn.com/http2-test)
-* TLS Forward secrecy (aka Perfect Forward Secrecy).
+* TLS Forward Secrecy, PFS (aka Perfect Forward Secrecy).
 * Supports Optional Username & Password (stored using bcrypt at 14+ rounds)
   * Alternately an `.htpasswd` file can be volume mounted. (Multiple named users)
 * Great for securing a Docker Registry, Rancher server, Wordpress, etc
@@ -31,7 +31,7 @@ Protect any HTTP service with HTTPS!
 
 ## Getting Started
 
-For example, to protect an HTTP service:
+To protect an HTTP service:
 
 1. Requires any working HTTP service (for UPSTREAM_TARGET.) (Supports **local, in-docker, even remote**).
 1. Start an instance of `justsml/ssl-proxy:latest` as shown below.
@@ -83,21 +83,21 @@ docker run -d --restart=on-failure:5 \
 ### Example For A Rancher Server
 
 ```sh
-
+docker pull rancher/server:latest
+docker pull justsml/ssl-proxy:latest
 ## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
 # Start Rancher w/ local port binding at 8080
-docker run -d --restart=on-failure:5 \
+docker run -d --restart=on-failure:2000 \
   --name rancher-server \
-  -p 8080 \
   -v /data/rancher/mysql:/var/lib/mysql \
   rancher/server:latest
 
 # Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
-docker run -d --restart=on-failure:5 \
+docker run -d --restart=on-failure:2000 \
   --name rancher-proxy \
   -p 8080:8080 \
   -e 'HTTPS_PORT=8080' \
-  -e 'SERVER_NAME=rancher.example.com' \
+  -e 'SERVER_NAME=_' \
   -e 'UPSTREAM_TARGET=rancher-server:8080' \
   -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
   -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \

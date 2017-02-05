@@ -12,4 +12,3 @@ EXPOSE 80 443
 RUN apk --update add bash apache2-utils openssl-dev
 
 ENTRYPOINT /www/entrypoint.sh
-

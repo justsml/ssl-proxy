@@ -83,17 +83,19 @@ docker run -d --restart=on-failure:5 \
 ### Example For A Rancher Server
 
 ```sh
+# Update Cached Docker Images
 docker pull rancher/server:latest
 docker pull justsml/ssl-proxy:latest
+
 ## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
-# Start Rancher w/ local port binding at 8080
-docker run -d --restart=on-failure:2000 \
+# Start Rancher - local port will be 8080
+docker run -d --restart=always \
   --name rancher-server \
   -v /data/rancher/mysql:/var/lib/mysql \
   rancher/server:latest
 
 # Create an ssl-proxy with certs in /certs, (w/o user/pass auth) to point at the local rancher-server's port 8080
-docker run -d --restart=on-failure:2000 \
+docker run -d --restart=always \
   --name rancher-proxy \
   -p 8080:8080 \
   -e 'HTTPS_PORT=8080' \

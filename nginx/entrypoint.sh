@@ -71,7 +71,7 @@ events {
   use epoll;
 }
 
-error_log   /var/log/nginx/error.log warn;
+# error_log   /var/log/nginx/error.log warn;
 pid         /var/run/nginx.pid;
 
 http {
@@ -97,7 +97,7 @@ http {
   log_format  main  '[\$time_local]	\$status	\$remote_addr	"\$http_x_forwarded_for"	"\$remote_user"	"\$request"	'
     '\$body_bytes_sent	"\$http_referer"	"\$http_user_agent"	ssl-proxy:$HOSTNAME';
 
-  access_log  /var/log/nginx/access.log  main;
+  # access_log  /var/log/nginx/access.log  main;
 
   client_max_body_size    4g;
 

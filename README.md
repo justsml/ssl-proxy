@@ -88,7 +88,7 @@ docker pull rancher/server:latest
 docker pull justsml/ssl-proxy:latest
 
 ## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
-# Start Rancher - local port will be 8080
+# Start Rancher w/ default local port 8080
 docker run -d --restart=always \
   --name rancher-server \
   -v /data/rancher/mysql:/var/lib/mysql \

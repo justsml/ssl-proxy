@@ -198,7 +198,7 @@ cat << EOF >> /tmp/nginx.conf
       }
 
       if (\$request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' \$http_origin always;
+        add_header 'Access-Control-Allow-Origin' $SERVER_NAME always;
         add_header 'Access-Control-Allow-Credentials' \$acac always;
         add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
         add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
@@ -208,7 +208,7 @@ cat << EOF >> /tmp/nginx.conf
         return 204;
       }
 
-      add_header 'Access-Control-Allow-Origin' \$http_origin always;
+      add_header 'Access-Control-Allow-Origin' $SERVER_NAME always;
       add_header 'Access-Control-Allow-Credentials' \$acac always;
       add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
       add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;

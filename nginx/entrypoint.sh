@@ -16,17 +16,35 @@ CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
 HTTPS_PORT=${HTTPS_PORT-"443"}
 TLS_PROTOCOLS=${TLS_PROTOCOLS-"TLSv1 TLSv1.1 TLSv1.2"}
 
+function setupCertbot() {
+  if [ "$(which certbot)" == "" ]; then
+    sudo apk -Uuv add certbot
+  fi
+}
+
+function getCertificate() {
+  setupCertbot
+  certbot certonly --standalone --noninteractive --expand --allow-subset-of-names --agree-tos \
+    --rsa-key-size 2048 \
+    --email postmaster@${SERVER_NAME} \
+    --domains ${SERVER_NAME}
+}
+
 if [ "$SERVER_NAME" == "" ]; then
   echo "Sh*t, you forgot to set the env var 'SERVER_NAME'"
   SERVER_NAME=`hostname -f`
   printf "\n###### GUESSING SERVER_NAME: $SERVER_NAME \n^^^^^ DETECTED ^^^^^\n"
 fi
 if [ ! -f "$CERT_PUBLIC_PATH" ]; then
-  printf >&2 "Sh*t, '\$CERT_PUBLIC_PATH' not found!\nNOT_FOUND: $CERT_PUBLIC_PATH\n"
-  exit -68
+  if [ "$CERT_AUTO" != "" ]; then
+    getCertificate
+  else
+    printf >&2 "Sh*t, '\$CERT_PUBLIC_PATH' not found!\nNOT_FOUND: $CERT_PUBLIC_PATH\n### To automatically request certificates set the env var: CERT_AUTO=true"
+    exit -68
+  fi
 fi
 if [ ! -f "$CERT_PRIVATE_PATH" ]; then
-  printf >&2 "Sh*t, '\$CERT_PRIVATE_PATH' not found!\nNOT_FOUND: $CERT_PRIVATE_PATH\n"
+  printf >&2 "Sh*t, '\$CERT_PRIVATE_PATH' not found!\nNOT_FOUND: $CERT_PRIVATE_PATH\n### To automatically request certificates set the env var: CERT_AUTO=true"
   exit -67
 fi
 if [ "$UPSTREAM_TARGET" == "" ]; then

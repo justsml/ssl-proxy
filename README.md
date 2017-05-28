@@ -3,6 +3,16 @@
 Protect any HTTP service with HTTPS!
 > An Nginx & Docker-based HTTPS/SSL reverse proxy.
 
+### Table of Contents
+
+1. [Features](#features)
+1. [Example](#example)
+1. [Getting Started](#getting-started)
+    1. [Secure Docker Registry Example](#secure-docker-registry-example)
+    1. [Secure Rancher Server Example](#secure-rancher-server-example)
+    1. [Docker Compose Example](#docker-compose-example)
+1. [Arguments / Configuration](#arguments)
+  
 ## Features
 
 * Up-to-date Nginx & Alpine Linux.
@@ -15,7 +25,9 @@ Protect any HTTP service with HTTPS!
   * Alternately an `.htpasswd` file can be volume mounted. (Multiple named users)
 * Great for securing a Docker Registry, Rancher server, Wordpress, etc
 
-## Example/sample SSLLabs/Qualys SSL & TLS Report
+## Example
+
+Sample SSL Labs/Qualys SSL & TLS Report:
 
 > Here's a sample of what you can expect with default configuration.
 
@@ -23,25 +35,25 @@ Protect any HTTP service with HTTPS!
 ![image](https://cloud.githubusercontent.com/assets/397632/21792860/f24203d2-d6a9-11e6-8e35-9138e55c81da.png)
 
 
-> Requirements:
->
-> 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
-> 1. An HTTP Service as your 'backend'
-
-
 ## Getting Started
 
-To protect an HTTP service:
+*Requirements*
+
+> 1. [Generate a HTTPS/SSL certificate using letsencrypt.](https://gist.github.com/justsml/63d2884e1cd88d6785999a2eb09cf48e)
+
+To provide secure, proxied access to local HTTP service:
 
 1. Requires any working HTTP service (for UPSTREAM_TARGET.) (Supports **local, in-docker, even remote**).
 1. Start an instance of `justsml/ssl-proxy:latest` as shown below.
 
+### Secure Docker Registry Example
+
 ```sh
-# Create docker registry - use it's internal exposed port 5000
+# Note: Small scale users can set certificates directly in the registry instance (v2+) 
 docker run -d --restart=on-failure:5 \
   --name docker-registry \
   -v /data/registry/registry:/var/lib/registry \
-  registry:2.0
+  registry:2.5
 
 # Create an ssl-proxy to point at the registry's port 5000 (via UPSTREAM_TARGET option - see below.)
 docker run -d --restart=on-failure:5 \
@@ -80,14 +92,13 @@ docker run -d --restart=on-failure:5 \
 
 ```
 
-### Example For A Rancher Server
+### Secure Rancher Server Example
 
 ```sh
 # Update Cached Docker Images
 docker pull rancher/server:latest
 docker pull justsml/ssl-proxy:latest
 
-## Generate SSL Certs using: https://github.com/justsml/system-setup-tools/blob/master/letsencrypt-docker.sh
 # Start Rancher w/ default local port 8080
 docker run -d --restart=always \
   --name rancher-server \
@@ -111,7 +122,7 @@ docker run -d --restart=always \
 
 
 
-### Docker compose example:
+### Docker Compose Example
 
 ```yaml
 version: '2'
@@ -136,12 +147,10 @@ services:
     - /data/rancher/mysql:/var/lib/mysql
 ```
 
+---------------
 
-===================
 
-
-Arguments
--------------------
+## Arguments
 
 |Name               | Default/Reqd  | Notes
 |-------------------|---------------|-----------------------|

@@ -68,7 +68,6 @@ worker_processes auto;
 events {
   worker_connections 4096;
   multi_accept on;
-  use epoll;
 }
 
 # error_log   /var/log/nginx/error.log warn;
@@ -261,16 +260,25 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header Sec-WebSocket-Protocol   \$http_sec_websocket_protocol;
       proxy_set_header Sec-WebSocket-Extensions \$http_sec_websocket_extensions;
 
-      # Recommended: ? Slow - Tested on greylog & rancher 2017-01-11 ?
-      # proxy_buffering off;
-      # proxy_buffer_size 4k;
 
+EOF
+# Check if we need to be low latency
+if [ "$LOW_LATENCY" != "" -o "$LATENCY" == "low"  ]; then
+  cat << EOF >> /tmp/nginx.conf
+      proxy_buffering off;
+      proxy_buffer_size 4k;
+EOF
+else
+  cat << EOF >> /tmp/nginx.conf
+      # Recommended: Generalized defaults - Tested on greylog & rancher 2017-01-11 ?
       proxy_buffering on;
       proxy_buffer_size 2k;
       proxy_buffers 16 4k;
       proxy_busy_buffers_size 8k;
       proxy_temp_file_write_size 128k;
       # proxy_max_temp_file_size 2m; # remove?
+EOF
+fi
 
       # proxy_intercept_errors off;
       # This allows the ability for the execute long connections (e.g. a web-based shell window)

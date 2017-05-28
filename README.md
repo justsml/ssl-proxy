@@ -154,6 +154,7 @@ services:
 
 |Name               | Default/Reqd  | Notes
 |-------------------|---------------|-----------------------|
+|CERT_AUTO          | Optional      | Set to `true` to automatically request certificate for $SERVER_NAME - caution: don't exceed let's encrypts API limits.
 |CERT_PUBLIC_PATH   | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |CERT_PRIVATE_PATH  | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |SERVER_NAME        | Required      | Primary domain name. Not restricting.

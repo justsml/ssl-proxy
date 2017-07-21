@@ -298,6 +298,7 @@ else
 EOF
 fi
 
+cat << EOF >> /tmp/nginx.conf
       # proxy_intercept_errors off;
       # This allows the ability for the execute long connections (e.g. a web-based shell window)
       # Without this parameter, the default is 1 minute and will automatically close.

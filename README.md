@@ -3,6 +3,8 @@
 Protect any HTTP service with HTTPS!
 > An Nginx & Docker-based HTTPS/SSL reverse proxy.
 
+> Will upgrade to newest nginx
+
 ### Table of Contents
 
 1. [Features](#features)

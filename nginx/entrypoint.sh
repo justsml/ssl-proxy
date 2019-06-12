@@ -277,9 +277,12 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header Sec-Websocket-Version    \$http_sec_websocket_version;
       proxy_set_header Sec-WebSocket-Protocol   \$http_sec_websocket_protocol;
       proxy_set_header Sec-WebSocket-Extensions \$http_sec_websocket_extensions;
-
-
 EOF
+if [ "$ADD_PROXY_HEADER" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      proxy_set_header $ADD_PROXY_HEADER;
+EOF
+fi
 # Check if we need to be low latency
 if [ "$LOW_LATENCY" != "" -o "$LATENCY" == "low"  ]; then
   cat << EOF >> /tmp/nginx.conf

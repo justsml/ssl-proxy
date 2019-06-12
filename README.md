@@ -90,8 +90,6 @@ docker run -d --restart=on-failure:5 \
   -v '/certs:/certs:ro' \
   --link 'docker-registry:docker-registry' \
   justsml/ssl-proxy:latest
-
-
 ```
 
 ### Secure Rancher Server Example
@@ -122,9 +120,7 @@ docker run -d --restart=always \
 
 ```
 
-
-
-### Docker Compose Example
+### Secure Rancher Server Example using Docker Compose
 
 ```yaml
 version: '2'
@@ -149,6 +145,31 @@ services:
     - /data/rancher/mysql:/var/lib/mysql
 ```
 
+### Client Verification Example
+
+```sh
+# Start Rancher w/ default local port 8080
+docker run -d --restart=always \
+  --name http-server \
+  -v /data/rancher/mysql:/var/lib/mysql \
+  rancher/server:latest
+
+# Create an ssl-proxy with certs in /certs, requiring a client certificate auth, to point at the local http-server's port 8080 and include the client certificate's subject as an http header
+docker run -d --restart=always \
+  --name verification-proxy \
+  -p 443:443 \
+  -e 'SERVER_NAME=verification.example.com' \
+  -e 'UPSTREAM_TARGET=http-server:8080' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
+  -e 'SSL_VERIFY_CLIENT=on' \
+  -e 'CERT_CLIENT_PATH=/certs/clientchain.pem' \
+  -e 'ADD_PROXY_HEADER=SSL_CLIENT_SUBJECT $ssl_client_s_dn' \
+  -v '/certs:/certs:ro' \
+  --link 'http-server:http-server' \
+  justsml/ssl-proxy:latest
+```
+
 ---------------
 
 
@@ -167,6 +188,8 @@ services:
 |USERNAME           | admin         | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWORD           |               | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWD_PATH        | /etc/nginx/.htpasswd | Alternate auth support (don't combine with USERNAME/PASSWORD) Bind-mount a custom path to `/etc/nginx/.htpasswd`
+|SSL_VERIFY_CLIENT  | Not set       | Set to verify client certificates (may be `on`, `off`, `optional`, or `optional_no_ca`). If set and not `optional_no_ca`, CERT_CLIENT_PATH must be set.
+|CERT_CLIENT_PATH   | Not set       | Needed for client certificate verification. This cert must be PEM-encoded and contain the trusted CA and Intermediate CA certs.
 |ADD_HEADER         | Not set       | Useful for tagging routes in your infrastructure.
 |ADD_PROXY_HEADER   | Not set       | Useful for providing metadata to the upstream server.
 

@@ -10,9 +10,10 @@ Protect any HTTP service with HTTPS!
 1. [Features](#features)
 1. [Example](#example)
 1. [Getting Started](#getting-started)
-    1. [Secure Docker Registry Example](#secure-docker-registry-example)
-    1. [Secure Rancher Server Example](#secure-rancher-server-example)
-    1. [Docker Compose Example](#docker-compose-example)
+  1. [Secure Docker Registry Example](#secure-docker-registry-example)
+  1. [Secure Rancher Server Example](#secure-rancher-server-example)
+  1. [Secure Rancher Server Example using Docker Compose](#secure-rancher-server-example-using-docker-compose)
+  1. [Client Verification Example](#client-verification-example)
 1. [Arguments / Configuration](#arguments)
   
 ## Features
@@ -148,11 +149,10 @@ services:
 ### Client Verification Example
 
 ```sh
-# Start Rancher w/ default local port 8080
+# Start an nginx server that responds with the incoming request's headers on port 8080
 docker run -d --restart=always \
   --name http-server \
-  -v /data/rancher/mysql:/var/lib/mysql \
-  rancher/server:latest
+  brndnmtthws/nginx-echo-headers
 
 # Create an ssl-proxy with certs in /certs, requiring a client certificate auth, to point at the local http-server's port 8080 and include the client certificate's subject as an http header
 docker run -d --restart=always \
@@ -164,7 +164,7 @@ docker run -d --restart=always \
   -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
   -e 'SSL_VERIFY_CLIENT=on' \
   -e 'CERT_CLIENT_PATH=/certs/clientchain.pem' \
-  -e 'ADD_PROXY_HEADER=SSL_CLIENT_SUBJECT $ssl_client_s_dn' \
+  -e 'ADD_PROXY_HEADER=X-Ssl-Client-Subject $ssl_client_s_dn' \
   -v '/certs:/certs:ro' \
   --link 'http-server:http-server' \
   justsml/ssl-proxy:latest

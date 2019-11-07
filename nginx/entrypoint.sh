@@ -15,6 +15,7 @@ CERT_PUBLIC_PATH=${CERT_PUBLIC_PATH-"/certs/fullchain.pem"}
 CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
 HTTPS_PORT=${HTTPS_PORT-"443"}
 TLS_PROTOCOLS=${TLS_PROTOCOLS-"TLSv1 TLSv1.1 TLSv1.2"}
+SERVER_NAMES_HASH_SIZE=${SERVER_NAMES_HASH_SIZE-"32"}
 
 function setupCertbot() {
   if [ "$(which certbot)" == "" ]; then
@@ -92,6 +93,7 @@ events {
 pid         /var/run/nginx.pid;
 
 http {
+  server_names_hash_bucket_size  $SERVER_NAMES_HASH_SIZE;
   map \$http_upgrade \$connection_upgrade {
     default upgrade;
     '' close;

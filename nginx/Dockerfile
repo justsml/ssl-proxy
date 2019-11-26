@@ -9,6 +9,8 @@ COPY ./entrypoint.sh ./
 EXPOSE 80 443
 
 # RUN apt-get update && apt-get install apache2-utils openssl -y
-RUN apk --update add bash apache2-utils openssl-dev
+RUN set -ex && apk --update --no-cache add \
+  bash apache2-utils openssl-dev \
+  sudo
 
 ENTRYPOINT /www/entrypoint.sh

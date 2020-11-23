@@ -227,6 +227,7 @@ cat << EOF >> /tmp/nginx.conf
         return 204;
       }
 
+      proxy_hide_header 'Access-Control-Allow-Origin';
       add_header 'Access-Control-Allow-Origin' ${CORS_ORIGIN} always;
       add_header 'Access-Control-Allow-Credentials' \$acac always;
       add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;

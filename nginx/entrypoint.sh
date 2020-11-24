@@ -15,6 +15,7 @@ CERT_PUBLIC_PATH=${CERT_PUBLIC_PATH-"/certs/fullchain.pem"}
 CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
 HTTPS_PORT=${HTTPS_PORT-"443"}
 TLS_PROTOCOLS=${TLS_PROTOCOLS-"TLSv1 TLSv1.1 TLSv1.2"}
+PROXY_HEADER_HOST=${PROXY_HEADER_HOST-'$host'}  # E.g., $host, $http_host, example.com:4443, etc.
 
 function setupCertbot() {
   if [ "$(which certbot)" == "" ]; then
@@ -265,7 +266,7 @@ cat << EOF >> /tmp/nginx.conf
       # add_header Strict-Transport-Security max-age=17968000 always;
       proxy_pass http://upstream;
       proxy_http_version 1.1;
-      proxy_set_header Host \$host;
+      proxy_set_header Host ${PROXY_HEADER_HOST};
       proxy_set_header X-Forwarded-Proto \$scheme;
       proxy_set_header X-Real-IP  \$remote_addr;
       proxy_set_header X-Forwarded-Port \$server_port;

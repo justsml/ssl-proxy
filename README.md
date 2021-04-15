@@ -10,9 +10,10 @@ Protect any HTTP service with HTTPS!
 1. [Features](#features)
 1. [Example](#example)
 1. [Getting Started](#getting-started)
-    1. [Secure Docker Registry Example](#secure-docker-registry-example)
-    1. [Secure Rancher Server Example](#secure-rancher-server-example)
-    1. [Docker Compose Example](#docker-compose-example)
+  1. [Secure Docker Registry Example](#secure-docker-registry-example)
+  1. [Secure Rancher Server Example](#secure-rancher-server-example)
+  1. [Secure Rancher Server Example using Docker Compose](#secure-rancher-server-example-using-docker-compose)
+  1. [Client Verification Example](#client-verification-example)
 1. [Arguments / Configuration](#arguments)
   
 ## Features
@@ -90,8 +91,6 @@ docker run -d --restart=on-failure:5 \
   -v '/certs:/certs:ro' \
   --link 'docker-registry:docker-registry' \
   justsml/ssl-proxy:latest
-
-
 ```
 
 ### Secure Rancher Server Example
@@ -122,9 +121,7 @@ docker run -d --restart=always \
 
 ```
 
-
-
-### Docker Compose Example
+### Secure Rancher Server Example using Docker Compose
 
 ```yaml
 version: '2'
@@ -149,6 +146,30 @@ services:
     - /data/rancher/mysql:/var/lib/mysql
 ```
 
+### Client Verification Example
+
+```sh
+# Start an nginx server that responds with the incoming request's headers on port 8080
+docker run -d --restart=always \
+  --name http-server \
+  brndnmtthws/nginx-echo-headers
+
+# Create an ssl-proxy with certs in /certs, requiring a client certificate auth, to point at the local http-server's port 8080 and include the client certificate's subject as an http header
+docker run -d --restart=always \
+  --name verification-proxy \
+  -p 443:443 \
+  -e 'SERVER_NAME=verification.example.com' \
+  -e 'UPSTREAM_TARGET=http-server:8080' \
+  -e 'CERT_PUBLIC_PATH=/certs/fullchain.pem' \
+  -e 'CERT_PRIVATE_PATH=/certs/privkey.pem' \
+  -e 'SSL_VERIFY_CLIENT=on' \
+  -e 'CERT_CLIENT_PATH=/certs/clientchain.pem' \
+  -e 'ADD_PROXY_HEADER=X-Ssl-Client-Subject $ssl_client_s_dn' \
+  -v '/certs:/certs:ro' \
+  --link 'http-server:http-server' \
+  justsml/ssl-proxy:latest
+```
+
 ---------------
 
 
@@ -168,12 +189,13 @@ services:
 |USERNAME           | admin         | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWORD           |               | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWD_PATH        | /etc/nginx/.htpasswd | Alternate auth support (don't combine with USERNAME/PASSWORD) Bind-mount a custom path to `/etc/nginx/.htpasswd`
+|SSL_VERIFY_CLIENT  | Not set       | Set to verify client certificates (may be `on`, `off`, `optional`, or `optional_no_ca`). If set and not `optional_no_ca`, CERT_CLIENT_PATH must be set.
+|CERT_CLIENT_PATH   | Not set       | Needed for client certificate verification. This cert must be PEM-encoded and contain the trusted CA and Intermediate CA certs.
 |ADD_HEADER         | Not set       | Useful for tagging routes in your infrastructure.
+|ADD_PROXY_HEADER   | Not set       | Useful for providing metadata to the upstream server.
 |SERVER_NAMES_HASH_SIZE         | 32       | Maximum size of server name. Set it to 64/128/... if nginx fails to start with `could not build server_names_hash, you should increase server_names_hash_bucket_size` error message.
 |PROXY_HEADER_HOST  | Optional       | The host value that will be set in the request header. Defaults to the nginx variable, `'$host'`. Set this value (e.g., to the nginx variable, `'$http_host'`) if including the port number in the `Host` header is important.
 
-
-===================
 
 -------------------
 

@@ -65,6 +65,14 @@ if [ "$ALLOW_RC4" != "" ]; then
 else
   HTTPS_RC4=" !RC4 "
 fi
+if [ "$SSL_VERIFY_CLIENT" != "" ]; then
+  if [ "$SSL_VERIFY_CLIENT" != "optional_no_ca" ]; then
+    if [ ! -f "$CERT_CLIENT_PATH" ]; then
+      printf >&2 "Sh*t, '\$CERT_CLIENT_PATH' not found!\nNOT_FOUND: $CERT_CLIENT_PATH"
+      exit -65
+    fi
+  fi
+fi
 
 if [ "$PASSWORD" != "" ]; then
   if [ ! -f $PASSWD_PATH ]; then
@@ -209,6 +217,17 @@ if [ -f "$DHPARAM_PATH" ]; then
     ssl_dhparam ${DHPARAM_PATH};
 EOF
 fi
+if [ "$SSL_VERIFY_CLIENT" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+    ssl_verify_client $SSL_VERIFY_CLIENT;
+    ssl_verify_depth 2; # support root and intermediate CAs
+EOF
+  if [ "$CERT_CLIENT_PATH" != "" ]; then
+    cat << EOF >> /tmp/nginx.conf
+    ssl_client_certificate $CERT_CLIENT_PATH;
+EOF
+  fi
+fi
 cat << EOF >> /tmp/nginx.conf
 
     location / {
@@ -282,9 +301,12 @@ cat << EOF >> /tmp/nginx.conf
       proxy_set_header Sec-Websocket-Version    \$http_sec_websocket_version;
       proxy_set_header Sec-WebSocket-Protocol   \$http_sec_websocket_protocol;
       proxy_set_header Sec-WebSocket-Extensions \$http_sec_websocket_extensions;
-
-
 EOF
+if [ "$ADD_PROXY_HEADER" != "" ]; then
+  cat << EOF >> /tmp/nginx.conf
+      proxy_set_header $ADD_PROXY_HEADER;
+EOF
+fi
 # Check if we need to be low latency
 if [ "$LOW_LATENCY" != "" -o "$LATENCY" == "low"  ]; then
   cat << EOF >> /tmp/nginx.conf

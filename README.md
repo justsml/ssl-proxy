@@ -160,6 +160,7 @@ services:
 |CERT_PUBLIC_PATH   | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |CERT_PRIVATE_PATH  | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |SERVER_NAME        | Required      | Primary domain name. Not restricting.
+|CORS_ORIGIN        | Optional      | CORS origin to use for `Access-Control-Allow-Origin` header. Defaults to `SERVER_NAME`.
 |UPSTREAM_TARGET    | Required      | HTTP target host:port. Typically an internally routable address. e.g. `localhost:9090` or `rancher-server:8080`
 |HTTPS_PORT         | 443/Required  | Needed for URL rewriting.
 |ALLOW_RC4          | Not set       | Backwards Compatible Option Required for Java 6 or WinXP/IE8
@@ -168,7 +169,8 @@ services:
 |PASSWORD           |               | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWD_PATH        | /etc/nginx/.htpasswd | Alternate auth support (don't combine with USERNAME/PASSWORD) Bind-mount a custom path to `/etc/nginx/.htpasswd`
 |ADD_HEADER         | Not set       | Useful for tagging routes in your infrastructure.
-|SERVER_NAMES_HASH_SIZE         | 32       | Variable conditionning maximum size of server name. Set it to 64/128/... if nginx fails to start with `could not build server_names_hash, you should increase server_names_hash_bucket_size` error message.
+|SERVER_NAMES_HASH_SIZE         | 32       | Maximum size of server name. Set it to 64/128/... if nginx fails to start with `could not build server_names_hash, you should increase server_names_hash_bucket_size` error message.
+|PROXY_HEADER_HOST  | Optional       | The host value that will be set in the request header. Defaults to the nginx variable, `'$host'`. Set this value (e.g., to the nginx variable, `'$http_host'`) if including the port number in the `Host` header is important.
 
 
 ===================

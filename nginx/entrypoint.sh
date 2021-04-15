@@ -16,6 +16,7 @@ CERT_PRIVATE_PATH=${CERT_PRIVATE_PATH-"/certs/privkey.pem"}
 HTTPS_PORT=${HTTPS_PORT-"443"}
 TLS_PROTOCOLS=${TLS_PROTOCOLS-"TLSv1 TLSv1.1 TLSv1.2"}
 PROXY_HEADER_HOST=${PROXY_HEADER_HOST-'$host'}  # E.g., $host, $http_host, example.com:4443, etc.
+CORS_ORIGIN=${CORS_ORIGIN-"$SERVER_NAME"}
 
 function setupCertbot() {
   if [ "$(which certbot)" == "" ]; then
@@ -217,7 +218,7 @@ cat << EOF >> /tmp/nginx.conf
       }
 
       if (\$request_method = 'OPTIONS') {
-        add_header 'Access-Control-Allow-Origin' $SERVER_NAME always;
+        add_header 'Access-Control-Allow-Origin' ${CORS_ORIGIN} always;
         add_header 'Access-Control-Allow-Credentials' \$acac always;
         add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
         add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;
@@ -227,7 +228,8 @@ cat << EOF >> /tmp/nginx.conf
         return 204;
       }
 
-      add_header 'Access-Control-Allow-Origin' $SERVER_NAME always;
+      proxy_hide_header 'Access-Control-Allow-Origin';
+      add_header 'Access-Control-Allow-Origin' ${CORS_ORIGIN} always;
       add_header 'Access-Control-Allow-Credentials' \$acac always;
       add_header 'Access-Control-Allow-Methods' ${CORS_METHODS-'GET, POST, PUT, DELETE, HEAD, OPTIONS'} always;
       add_header 'Access-Control-Allow-Headers' ${CORS_HEADERS-'Sec-WebSocket-Extensions,Sec-WebSocket-Key,Sec-WebSocket-Protocol,Sec-WebSocket-Version,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,x-api-action-links,x-api-csrf,x-api-no-challenge,X-Forwarded-For,X-Real-IP'} always;

@@ -160,6 +160,7 @@ services:
 |CERT_PUBLIC_PATH   | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |CERT_PRIVATE_PATH  | Reqd. PEM file| Bind-mount certificate files to container path `/certs` - Or override path w/ this var.
 |SERVER_NAME        | Required      | Primary domain name. Not restricting.
+|CORS_ORIGIN        | Optional      | CORS origin to use for `Access-Control-Allow-Origin` header. Defaults to `SERVER_NAME`.
 |UPSTREAM_TARGET    | Required      | HTTP target host:port. Typically an internally routable address. e.g. `localhost:9090` or `rancher-server:8080`
 |HTTPS_PORT         | 443/Required  | Needed for URL rewriting.
 |ALLOW_RC4          | Not set       | Backwards Compatible Option Required for Java 6 or WinXP/IE8

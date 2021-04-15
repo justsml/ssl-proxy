@@ -169,6 +169,7 @@ services:
 |PASSWORD           |               | Both PASSWORD and USERNAME must be set in order to use Basic authorization
 |PASSWD_PATH        | /etc/nginx/.htpasswd | Alternate auth support (don't combine with USERNAME/PASSWORD) Bind-mount a custom path to `/etc/nginx/.htpasswd`
 |ADD_HEADER         | Not set       | Useful for tagging routes in your infrastructure.
+|SERVER_NAMES_HASH_SIZE         | 32       | Maximum size of server name. Set it to 64/128/... if nginx fails to start with `could not build server_names_hash, you should increase server_names_hash_bucket_size` error message.
 |PROXY_HEADER_HOST  | Optional       | The host value that will be set in the request header. Defaults to the nginx variable, `'$host'`. Set this value (e.g., to the nginx variable, `'$http_host'`) if including the port number in the `Host` header is important.
 
 
